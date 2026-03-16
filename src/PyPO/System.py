@@ -2357,7 +2357,7 @@ class System(object):
         fig, ax = PPlot.plotBeam2D(plotObject, field_comp, contour_pl,
                         vmin, vmax, levels, amp_only,
                         norm, aperDict, scale, project,
-                        units, titleA, titleP, unwrap_phase, correct_phase)
+                        units, titleA, titleP, unwrap_phase, correct_phase, field.k)
         if ret:
             return fig, ax
 

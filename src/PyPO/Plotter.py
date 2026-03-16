@@ -21,7 +21,7 @@ from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, S
 def plotBeam2D(plotObject, field, contour,
                 vmin, vmax, levels, amp_only,
                 norm, aperDict, scale, project,
-                units, titleA, titleP, unwrap_phase, correct_phase=None):
+                units, titleA, titleP, unwrap_phase, correct_phase=None, k=None):
     """!
     Generate a 2D plot of a field or current.
 
@@ -42,6 +42,7 @@ def plotBeam2D(plotObject, field, contour,
     @param unwrap_phase Unwrap the phase pattern. Prevents annular structure in phase pattern. Default is False.
     @param correct_phase Boolean or 3 element numpy array. Applies a phase factor to the field equal to
             k*displacement of the grid along the Z-axis (True) or direction of the 3-vector.
+    @param k Wavenumber to use for phase correction. Only used if correct_phase is not False.
 
     @returns fig Figure object containing plot.
     @returns ax Axes containing the axes of the plot.
@@ -111,39 +112,41 @@ def plotBeam2D(plotObject, field, contour,
             if type(correct_phase) is bool:
                 if correct_phase:
                     # Correct phase for z-axis displacement
-                    if plotObject['gmode'] == 'uv':
+                    if plotObject['gmode'] == 1:
                         z0 = grids.z[0,0]
-                        nz = grids.nz[0,0]
-                        phase_factor = np.exp(1j*field.k*(nz*grids.z-z0))
-                    elif plotObject['gmode'] == 'xy':
+                        nz = np.mean(grids.nz[0,:])
+                        phase_factor = np.exp(-1j*k*(nz*(grids.z-z0)))
+                    elif plotObject['gmode'] == 0:
                         shape = grids.z.shape
                         z0 = grids.z[int(shape[0]/2), int(shape[1]/2)]
                         nz = grids.nz[int(shape[0]/2), int(shape[1]/2)]
-                        phase_factor = np.exp(1j*field.k*(nz*grids.z-z0))
-                    else: # Don't know what to do for farfields
+                        phase_factor = np.exp(-1j*k*(nz*(grids.z-z0)))
+                    else: # Don't do anything for farfields
                         phase_factor = 1.0
                 else:
                     phase_factor = 1.0
             else: # Phase factor is a vector
                 try:
-                    if correct_phase.shape != 3:
+                    if len(correct_phase) != 3:
                         raise ValueError
-                except ValueError, KeyError, TypeError:
+                except (ValueError, KeyError, TypeError):
                     raise ValueError("correct_phase must be either boolean or np.ndarray((nx, ny, nz))")
                 
-                norm = correct_phase / np.linalg.vector_norm(correct_phase)
-                offset = np.linalg.vecdot(np.stack(grids.x, grids.y, grids.z, axis=0))
-                if plotObject['gmode'] == 'uv':
+                vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
+                offset = np.linalg.vecdot(vnorm, np.stack((grids.x, grids.y, grids.z), axis=-1))
+
+                if plotObject['gmode'] == 1:
                     z0 = offset[0,0]
-                    phase_factor = np.exp(1j*field.k*(offset-z0))
-                elif plotObject['gmode'] == 'xy':
+                    phase_factor = np.exp(-1j*k*(offset-z0))
+                elif plotObject['gmode'] == 0:
                     shape = offset.shape
                     z0 = offset[int(shape[0]/2), int(shape[1]/2)]
-                    phase_factor = np.exp(1j*field.k*(offset-z0))
+                    phase_factor = np.exp(-1j*k*(offset-z0))
                 else: # Don't know what to do for farfields
                     phase_factor = 1.0
         else:
             phase_factor = 1.
+
 
         if scale == Scales.LIN:
             if norm:

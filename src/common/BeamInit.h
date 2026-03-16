@@ -307,10 +307,7 @@ void initGauss(T gdict, U refldict, V *res_field, V *res_current)
     Utils<G> ut;
 
     bool transform = true;
-    printf("initGauss calling generateGrid\n");
     generateGrid(refldict, &reflc, transform);
-
-    printf("initGauss returned from generateGrid\n");
 
     G zRx      = M_PI * gdict.w0x*gdict.w0x * gdict.n / gdict.lam;
     G zRy      = M_PI * gdict.w0y*gdict.w0y * gdict.n / gdict.lam;
