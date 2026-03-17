@@ -2281,7 +2281,7 @@ class System(object):
                     show : bool = True, amp_only : bool = False, save : bool = False, norm : bool = True,
                     aperDict : dict = None, scale : Scales = Scales.dB, project : Projections = Projections.xy,
                     units : Unit = Units.MM, name : str = "", titleA : str ="Power", titleP : str = "Phase",
-                    unwrap_phase : bool = False, correct_phase : bool | np.ndarray = False, ret : bool = False
+                    unwrap_phase : bool = False, correct_phase : bool | int | np.ndarray = False, ret : bool = False
                     ) -> tuple[pt.Figure, pt.Axes]:
         """!
         Generate a 2D plot of a PO (scalar)field or current.
@@ -2310,7 +2310,7 @@ class System(object):
         @param titleA Title of the amplitude plot. Default is "Amp".
         @param titleP Title of the phase plot. Default is "Phase".
         @param unwrap_phase Unwrap the phase patter. Prevents annular structure in phase pattern. Default is False.
-        @param correct_phase Correct the phase for offset from the center of the reflector in z, or along a 3-vector direction.
+        @param correct_phase Correct the phase for offset from the center of the reflector along the normal, or along a 3-vector direction.  Sign of the int sets the direction of the phase factor to apply.
         @param ret Return the Figure and Axis object. Only called by GUI. Default is False.
         
         @returns fig Figure object.

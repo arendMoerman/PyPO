@@ -110,42 +110,38 @@ def plotBeam2D(plotObject, field, contour,
 
         if correct_phase is not None:
             if type(correct_phase) is bool:
-                if correct_phase:
-                    # Correct phase for z-axis displacement
-                    if plotObject['gmode'] == 1:
-                        z0 = grids.z[0,0]
-                        nz = np.mean(grids.nz[0,:])
-                        phase_factor = np.exp(-1j*k*(nz*(grids.z-z0)))
-                    elif plotObject['gmode'] == 0:
-                        shape = grids.z.shape
-                        z0 = grids.z[int(shape[0]/2), int(shape[1]/2)]
-                        nz = grids.nz[int(shape[0]/2), int(shape[1]/2)]
-                        phase_factor = np.exp(-1j*k*(nz*(grids.z-z0)))
-                    else: # Don't do anything for farfields
-                        phase_factor = 1.0
-                else:
-                    phase_factor = 1.0
-            else: # Phase factor is a vector
+                correct_phase = 1
+                
+            if type(correct_phase) is int or type(correct_phase) is float:
+                correct_phase = int(np.sign(correct_phase))
+                # Correct phase for z-axis displacement
+                if plotObject['gmode'] == 1:
+                    correct_phase = correct_phase*np.array((np.mean(grids.nx[0,:]), np.mean(grids.nx[0,:]), np.mean(grids.nz[0,:])))
+                    vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
+                elif plotObject['gmode'] == 0:
+                    shape = grids.z.shape
+                    n,m = int(shape/2)
+                    vnorm = correct_phase*np.array((grids.nx[n,m], grids.ny[n,m], grids.nz[n, m]))
+            else: # Correct_phase is a vector
                 try:
                     if len(correct_phase) != 3:
                         raise ValueError
                 except (ValueError, KeyError, TypeError):
-                    raise ValueError("correct_phase must be either boolean or np.ndarray((nx, ny, nz))")
-                
+                    raise ValueError("correct_phase must be either boolean, number or np.ndarray((nx, ny, nz))")
                 vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
-                offset = np.linalg.vecdot(vnorm, np.stack((grids.x, grids.y, grids.z), axis=-1))
+            
+            offset = np.linalg.vecdot(vnorm, np.stack((grids.x, grids.y, grids.z), axis=-1))
 
-                if plotObject['gmode'] == 1:
-                    z0 = offset[0,0]
-                    phase_factor = np.exp(-1j*k*(offset-z0))
-                elif plotObject['gmode'] == 0:
-                    shape = offset.shape
-                    z0 = offset[int(shape[0]/2), int(shape[1]/2)]
-                    phase_factor = np.exp(-1j*k*(offset-z0))
-                else: # Don't know what to do for farfields
-                    phase_factor = 1.0
+            if plotObject['gmode'] == 1:
+                r0 = np.mean(offset[0,:])
+                phase_factor = np.exp(-1j*k*(offset-r0))
+            elif plotObject['gmode'] == 0:
+                r0 = offset[n,m]
+                phase_factor = np.exp(-1j*k*(offset-r0))
+            else: # Don't know what to do for farfields
+                phase_factor = 1.0
         else:
-            phase_factor = 1.
+            phase_factor = 1.0
 
 
         if scale == Scales.LIN:
