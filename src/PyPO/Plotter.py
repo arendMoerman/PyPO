@@ -122,7 +122,7 @@ def plotBeam2D(plotObject, field, contour,
                 correct_phase = int(np.sign(correct_phase))
                 # Correct phase for z-axis displacement
                 if plotObject['gmode'] == 1:
-                    correct_phase = correct_phase*np.array((np.mean(grids.nx[0,:]), np.mean(grids.nx[0,:]), np.mean(grids.nz[0,:])))
+                    correct_phase = correct_phase*np.array((np.mean(grids.nx[0,:]), np.mean(grids.ny[0,:]), np.mean(grids.nz[0,:])))
                     vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
                 elif plotObject['gmode'] == 0:
                     shape = grids.z.shape
@@ -161,9 +161,10 @@ def plotBeam2D(plotObject, field, contour,
                 if contour is not None:
                     contour = np.absolute(contour)
 
-            vmin = np.nanmin(field_pl) if vmin is None else vmin
             vmax = np.nanmax(field_pl) if vmax is None else vmax
-            
+            if vmin is None:
+                vmin = np.nanmin(field_pl)
+                    
             if unwrap_phase:
                 phase = np.unwrap(np.unwrap(np.angle(field*phase_factor), axis=0), axis=1)
 
@@ -192,8 +193,9 @@ def plotBeam2D(plotObject, field, contour,
                 if contour is not None:
                     contour = np.absolute(contour)
 
-            vmin = np.min(field_pl) if vmin is None else vmin
-            vmax = np.max(field_pl) if vmax is None else vmax
+            vmax = np.nanmax(field_pl) if vmax is None else vmax
+            if vmin is None:
+                vmin = np.nanmin(field_pl)
             
             if unwrap_phase:
                 phase = np.unwrap(np.unwrap(np.angle(field*phase_factor), axis=0), axis=1)
@@ -229,8 +231,11 @@ def plotBeam2D(plotObject, field, contour,
                 else:
                     contour_dB = 20 * np.log10(np.absolute(contour))
             
-            vmin = np.nanmin(field_dB) if vmin is None else vmin
             vmax = np.nanmax(field_dB) if vmax is None else vmax
+            if norm:
+                vmin = np.nanmin(field_dB) if vmin is None else vmin
+            else:
+                vmin = np.nanmin(field_dB) if vmin is None else vmax - abs(vmin)
             
             if unwrap_phase:
                 phase = np.unwrap(np.unwrap(np.angle(field*phase_factor), axis=0), axis=1)

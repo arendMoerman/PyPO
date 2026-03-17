@@ -188,7 +188,8 @@ class vecGPODict(ctypes.Structure):
                 ("w0", ctypes.c_double),
                 ("z", ctypes.c_double),
                 ("n", ctypes.c_double),
-                ("power", ctypes.c_double)]
+                ("power", ctypes.c_double),
+                ("mode", ctypes.c_int)]
     
 class ScalarGPODict(ctypes.Structure):
     """!
@@ -381,7 +382,8 @@ class vecGPODictf(ctypes.Structure):
                 ("w0", ctypes.c_float),
                 ("z", ctypes.c_float),
                 ("w", ctypes.c_float),
-                ("power", ctypes.c_float)]
+                ("power", ctypes.c_float),
+                ("mode", ctypes.c_int)]
 
 class ScalarGPODictf(ctypes.Structure):
     """!

@@ -198,6 +198,7 @@ struct vecGPODict {
     double z;         /**<Distance along beam in z-direction, in millimeters.*/
     double n;         /**<Refractive index of medium.*/
     double power;     /**<Peak electric field value.*/
+    int mode;        /**<Mode to create beam in */
 };
 
 
@@ -402,6 +403,7 @@ struct vecGPODictf {
     float z;         /**<Distance along beam in z-direction, in millimeters.*/
     float n;         /**<Refractive index of medium.*/
     float power;     /**<Peak electric field value.*/
+    int mode;        /**<Mode to create beam in */
 };
 
 

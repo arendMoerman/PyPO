@@ -1427,6 +1427,7 @@ class System(object):
 
         _gaussDict = self.copyObj(gaussDict)
         PChecks.check_vecGPODict(_gaussDict, self.fields, self.clog)
+        print(_gaussDict)
         
         refldict = self.system[name_surface]
         
@@ -2318,7 +2319,7 @@ class System(object):
         @param comp Component of field or current to plot. String of two characters; an uppercase {E, H, J, M} for field followed by a lowercase {x, y, z} for component. (e.g: 'Jz')
         @param contour A PyPO field or current component to plot as contour.
         @param contour_comp Component of contour to plot as contour. If None, assumes the contour is a scalarfield.
-        @param vmin Minimum amplitude value to display. Default is -30.
+        @param vmin Minimum amplitude value to display. Default is -30. If not normalized, vmin is the range below vmax.
         @param vmax Maximum amplitude value to display. Default is 0.
         @param levels Levels for contourplot.
         @param show Show plot. Default is True.
