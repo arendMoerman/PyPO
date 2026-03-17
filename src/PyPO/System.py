@@ -1855,7 +1855,7 @@ class System(object):
                      phi : float = 0, 
                      center : bool = True, 
                      align : bool = True,
-                     norm : FieldComponents = FieldComponents.NONE, 
+                     norm : FieldComponents | bool = True, 
                      transform : bool = False, 
                      scale : Scales = Scales.dB,
                      full_output : bool = False,
@@ -1888,8 +1888,10 @@ class System(object):
         @returns x_strip Co-ordinate values for x_cut.
         @returns y_strip Co-ordinate values for y_cut.
         """
-
-        norm = comp if norm is FieldComponents.NONE else norm
+        # Set the norm component equal to the component
+        # This is not triggered if a vector FieldComponents is passed
+        if norm is True or norm is FieldComponents.NONE:
+            norm = comp
 
         PChecks.check_fieldSystem(name_field, self.fields, self.clog, extern=True)
  
@@ -1907,7 +1909,10 @@ class System(object):
         y_edges = np.array([np.min(grids.y), np.max(grids.y)])
 
         field = np.absolute(self.fields[name_field][comp.value])
-        max_norm = np.nanmax(np.absolute(self.fields[name_field][norm.value]))
+        if norm:
+            max_norm = np.nanmax(np.absolute(self.fields[name_field][norm.value]))
+        else:
+            max_norm = 1.0
 
         center_use = np.zeros(2)
         rot_use = np.radians(phi)
@@ -1958,15 +1963,19 @@ class System(object):
 
     def plotBeamCut(self, 
                     name_field : str, 
-                    comp : FieldComponents, 
+                    comp : FieldComponents,
+                    phi : float = 0.0, 
                     comp_cross : FieldComponents = FieldComponents.NONE, 
+                    phi_cross : float = 45.0,
                     vmin : float = None, 
                     vmax : float = None, 
                     center : bool = True, 
-                    align : bool = True, 
+                    align : bool = True,
+                    norm : bool = True, 
                     scale : Scales = Scales.dB, 
                     units : Unit = Units.DEG, 
-                    name : str = "", 
+                    name : str = "",
+                    title : str = "", 
                     show : bool = True, 
                     save : bool = False, 
                     ret : bool = False
@@ -1998,15 +2007,29 @@ class System(object):
         @returns ax Axes object.
         """
 
-        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, center=center, align=align, scale=scale)
+        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=scale)
 
-        if comp_cross is not FieldComponents.NONE:
-            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=45, align=False, center=False, norm=comp)
-
-        vmin = np.nanmin([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmin
         vmax = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmax is None else vmax
+        if norm:
+            vmin = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmin is None else vmin
+        else:
+            vmin = np.nanmax([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmax - abs(vmin)
+            
+        labels = [f'{comp.name} $\phi=${phi:.0f}°', f'{comp.name} $\phi=${phi+90:.0f}°']
+            
+        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units, labels=labels)
         
-        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units)
+        if comp_cross is not FieldComponents.NONE:
+            if norm:
+                norm_cross = comp
+            else:
+                norm_cross = False
+            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
+            labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
+            PPlot.plotBeamCut(cr45_cut, cr135_cut, cr45_strip, cr135_strip, vmin, vmax, units, figax=(fig, ax), labels=labels)
+
+        if title is not "":
+            fig.suptitle(title)
 
         if ret:
             return fig, ax

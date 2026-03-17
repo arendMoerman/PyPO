@@ -21,7 +21,7 @@ from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, S
 def plotBeam2D(plotObject, field, contour,
                 vmin, vmax, levels, amp_only,
                 norm, aperDict, scale, project,
-                units, title, titleA, titleP, unwrap_phase, correct_phase=None, k=None):
+                units, title, titleA, titleP, unwrap_phase, correct_phase=False, k=None):
     """!
     Generate a 2D plot of a field or current.
 
@@ -55,6 +55,8 @@ def plotBeam2D(plotObject, field, contour,
     max_field = np.max(np.absolute(field))
     grids = BRefl.generateGrid(plotObject, transform=True, spheric=False)
     if not plotObject["gmode"] == 2:
+        if units.dimension != 'spatial':
+            units = Units.MM
         if project == Projections.xy:
             grid_x1 = grids.x
             grid_x2 = grids.y
@@ -91,7 +93,10 @@ def plotBeam2D(plotObject, field, contour,
             ff_flag = False
             comps = ["x", "z"]
 
-    else:
+    else: # probably a farfield grid
+        if units.dimension != 'angular':
+            units = Units.DEG
+            
         if project == Projections.xy:
             grid_x1 = grids.x
             grid_x2 = grids.y
@@ -109,7 +114,7 @@ def plotBeam2D(plotObject, field, contour,
     if not amp_only:
         fig, ax = pt.subplots(1,2, figsize=(10,5), gridspec_kw={'wspace':0.5})
 
-        if correct_phase is not None:
+        if correct_phase is not False:
             if type(correct_phase) is bool:
                 correct_phase = 1
                 
@@ -489,7 +494,7 @@ def plotSystem(systemDict, ax, fine, cmap,norm,
     #ax.set_box_aspect((1,1,1))
     ax.set_box_aspect((world_limits[1]-world_limits[0],world_limits[3]-world_limits[2],world_limits[5]-world_limits[4]))
 
-def plotBeamCut(x_cut, y_cut, x_strip, y_strip, vmin, vmax, units, scale=Scales.dB):
+def plotBeamCut(x_cut, y_cut, x_strip, y_strip, vmin, vmax, units, scale=Scales.dB, figax=None, labels=None):
     """!
     Plot two beam cuts in the same figure.
 
@@ -504,15 +509,21 @@ def plotBeamCut(x_cut, y_cut, x_strip, y_strip, vmin, vmax, units, scale=Scales.
     @returns fig Plot figure.
     @returns ax Plot axis.
     """
-    fig, ax = pt.subplots(1,1, figsize=(5,5)) 
+    if figax is None:
+        fig, ax = pt.subplots(1,1, figsize=(5,5)) 
+    else:
+        fig, ax = figax
 
-    ax.plot(x_strip/units, x_cut, color="blue", label="E-plane")
-    ax.plot(y_strip/units, y_cut, color="red", ls="dashed", label="H-plane")
+    if labels is None:
+        labels = ["E-plane", "H-plane"]
+
+    ax.plot(x_strip/units, x_cut, label=labels[0])
+    ax.plot(y_strip/units, y_cut, ls="dashed", label=labels[1])
 
     ax.set_xlim(np.nanmin(x_strip/units), np.nanmax(x_strip/units))
     ax.set_ylim(vmin, vmax)
 
-    ax.set_xlabel(f"$\theta$ ({units.name})")
+    ax.set_xlabel(f"$\\theta$ ({units.name})")
     if scale.name is 'dB':
         ax.set_ylabel("Power (dB)")
     elif scale.name is 'LIN':
