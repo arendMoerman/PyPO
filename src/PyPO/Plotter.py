@@ -21,7 +21,7 @@ from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, S
 def plotBeam2D(plotObject, field, contour,
                 vmin, vmax, levels, amp_only,
                 norm, aperDict, scale, project,
-                units, titleA, titleP, unwrap_phase, correct_phase=None, k=None):
+                units, title, titleA, titleP, unwrap_phase, correct_phase=None, k=None):
     """!
     Generate a 2D plot of a field or current.
 
@@ -37,6 +37,7 @@ def plotBeam2D(plotObject, field, contour,
     @param scale Plot amplitude in decibels, logarithmic or linear scale. Instance of Scales enum object.
     @param project Set abscissa and ordinate of plot. Should be given as an instance of the Projection enum.
     @param units The units of the axes. Instance of Units enum object.
+    @param title An overall title for the plot. Defaults to the field name and component.
     @param titleA Title of the amplitude plot. Default is "Amp".
     @param titleP Title of the phase plot. Default is "Phase".
     @param unwrap_phase Unwrap the phase pattern. Prevents annular structure in phase pattern. Default is False.
@@ -316,6 +317,9 @@ def plotBeam2D(plotObject, field, contour,
         ax.set_box_aspect(1)
 
         c = fig.colorbar(ampfig, cax=cax, orientation='vertical')
+    
+    if title is not None:
+        fig.suptitle(title)
     
     if aperDict["plot"]:
         if aperDict["shape"] == "ellipse":

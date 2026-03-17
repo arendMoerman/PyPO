@@ -2280,7 +2280,7 @@ class System(object):
                     vmin : float = None, vmax : float = None, levels : contourLevels = None, 
                     show : bool = True, amp_only : bool = False, save : bool = False, norm : bool = True,
                     aperDict : dict = None, scale : Scales = Scales.dB, project : Projections = Projections.xy,
-                    units : Unit = Units.MM, name : str = "", titleA : str ="Power", titleP : str = "Phase",
+                    units : Unit = Units.MM, name : str = "", title : str = None, titleA : str ="Power", titleP : str = "Phase",
                     unwrap_phase : bool = False, correct_phase : bool | int | np.ndarray = False, ret : bool = False
                     ) -> tuple[pt.Figure, pt.Axes]:
         """!
@@ -2307,6 +2307,7 @@ class System(object):
         @param project Set abscissa and ordinate of plot. Should be given as an instance of the Projection enum. Default is Projection.xy.
         @param units The units of the axes. Instance of Units enum object.
         @param name Name of .png file where plot is saved. Only when save=True. Default is "".
+        @param title An overall title for the plot. Defaults to the field name and component.
         @param titleA Title of the amplitude plot. Default is "Amp".
         @param titleP Title of the phase plot. Default is "Phase".
         @param unwrap_phase Unwrap the phase patter. Prevents annular structure in phase pattern. Default is False.
@@ -2354,10 +2355,13 @@ class System(object):
 
         plotObject = self.system[name_surface]
 
+        if title is None:
+            title = f"{name_obj} {comp.name}"
+
         fig, ax = PPlot.plotBeam2D(plotObject, field_comp, contour_pl,
                         vmin, vmax, levels, amp_only,
                         norm, aperDict, scale, project,
-                        units, titleA, titleP, unwrap_phase, correct_phase, field.k)
+                        units, title, titleA, titleP, unwrap_phase, correct_phase, field.k)
         if ret:
             return fig, ax
 
