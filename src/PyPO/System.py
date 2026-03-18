@@ -33,7 +33,7 @@ from PyPO.CustomLogger import CustomLogger
 import PyPO.Plotter as PPlot
 import PyPO.Efficiencies as Effs
 import PyPO.FitGauss as FGauss
-from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, Scales, Objects, Modes
+from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, Scales, Objects, Modes, Unit
 
 import PyPO.WorldParam as world
 
@@ -1427,6 +1427,7 @@ class System(object):
 
         _gaussDict = self.copyObj(gaussDict)
         PChecks.check_vecGPODict(_gaussDict, self.fields, self.clog)
+        print(_gaussDict)
         
         refldict = self.system[name_surface]
         
@@ -1855,7 +1856,7 @@ class System(object):
                      phi : float = 0, 
                      center : bool = True, 
                      align : bool = True,
-                     norm : FieldComponents = FieldComponents.NONE, 
+                     norm : FieldComponents | bool = True, 
                      transform : bool = False, 
                      scale : Scales = Scales.dB,
                      full_output : bool = False,
@@ -1888,8 +1889,10 @@ class System(object):
         @returns x_strip Co-ordinate values for x_cut.
         @returns y_strip Co-ordinate values for y_cut.
         """
-
-        norm = comp if norm is FieldComponents.NONE else norm
+        # Set the norm component equal to the component
+        # This is not triggered if a vector FieldComponents is passed
+        if norm is True or norm is FieldComponents.NONE:
+            norm = comp
 
         PChecks.check_fieldSystem(name_field, self.fields, self.clog, extern=True)
  
@@ -1907,7 +1910,10 @@ class System(object):
         y_edges = np.array([np.min(grids.y), np.max(grids.y)])
 
         field = np.absolute(self.fields[name_field][comp.value])
-        max_norm = np.nanmax(np.absolute(self.fields[name_field][norm.value]))
+        if norm:
+            max_norm = np.nanmax(np.absolute(self.fields[name_field][norm.value]))
+        else:
+            max_norm = 1.0
 
         center_use = np.zeros(2)
         rot_use = np.radians(phi)
@@ -1958,15 +1964,19 @@ class System(object):
 
     def plotBeamCut(self, 
                     name_field : str, 
-                    comp : FieldComponents, 
+                    comp : FieldComponents,
+                    phi : float = 0.0, 
                     comp_cross : FieldComponents = FieldComponents.NONE, 
+                    phi_cross : float = 45.0,
                     vmin : float = None, 
                     vmax : float = None, 
                     center : bool = True, 
-                    align : bool = True, 
+                    align : bool = True,
+                    norm : bool = True, 
                     scale : Scales = Scales.dB, 
-                    units : Units = Units.DEG, 
-                    name : str = "", 
+                    units : Unit = Units.DEG, 
+                    name : str = "",
+                    title : str = "", 
                     show : bool = True, 
                     save : bool = False, 
                     ret : bool = False
@@ -1998,15 +2008,29 @@ class System(object):
         @returns ax Axes object.
         """
 
-        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, center=center, align=align, scale=scale)
+        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=scale)
 
-        if comp_cross is not FieldComponents.NONE:
-            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=45, align=False, center=False, norm="Ex")
-
-        vmin = np.nanmin([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmin
         vmax = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmax is None else vmax
+        if norm:
+            vmin = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmin is None else vmin
+        else:
+            vmin = np.nanmax([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmax - abs(vmin)
+            
+        labels = [f'{comp.name} $\phi=${phi:.0f}°', f'{comp.name} $\phi=${phi+90:.0f}°']
+            
+        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units, labels=labels)
         
-        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units)
+        if comp_cross is not FieldComponents.NONE:
+            if norm:
+                norm_cross = comp
+            else:
+                norm_cross = False
+            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
+            labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
+            PPlot.plotBeamCut(cr45_cut, cr135_cut, cr45_strip, cr135_strip, vmin, vmax, units, figax=(fig, ax), labels=labels)
+
+        if title is not "":
+            fig.suptitle(title)
 
         if ret:
             return fig, ax
@@ -2280,8 +2304,8 @@ class System(object):
                     vmin : float = None, vmax : float = None, levels : contourLevels = None, 
                     show : bool = True, amp_only : bool = False, save : bool = False, norm : bool = True,
                     aperDict : dict = None, scale : Scales = Scales.dB, project : Projections = Projections.xy,
-                    units : Units = Units.MM, name : str = "", titleA : str ="Power", titleP : str = "Phase",
-                    unwrap_phase : bool = False, ret : bool = False
+                    units : Unit = Units.MM, name : str = "", title : str = None, titleA : str ="Power", titleP : str = "Phase",
+                    unwrap_phase : bool = False, correct_phase : bool | int | np.ndarray = False, ret : bool = False
                     ) -> tuple[pt.Figure, pt.Axes]:
         """!
         Generate a 2D plot of a PO (scalar)field or current.
@@ -2295,7 +2319,7 @@ class System(object):
         @param comp Component of field or current to plot. String of two characters; an uppercase {E, H, J, M} for field followed by a lowercase {x, y, z} for component. (e.g: 'Jz')
         @param contour A PyPO field or current component to plot as contour.
         @param contour_comp Component of contour to plot as contour. If None, assumes the contour is a scalarfield.
-        @param vmin Minimum amplitude value to display. Default is -30.
+        @param vmin Minimum amplitude value to display. Default is -30. If not normalized, vmin is the range below vmax.
         @param vmax Maximum amplitude value to display. Default is 0.
         @param levels Levels for contourplot.
         @param show Show plot. Default is True.
@@ -2307,9 +2331,11 @@ class System(object):
         @param project Set abscissa and ordinate of plot. Should be given as an instance of the Projection enum. Default is Projection.xy.
         @param units The units of the axes. Instance of Units enum object.
         @param name Name of .png file where plot is saved. Only when save=True. Default is "".
+        @param title An overall title for the plot. Defaults to the field name and component.
         @param titleA Title of the amplitude plot. Default is "Amp".
         @param titleP Title of the phase plot. Default is "Phase".
         @param unwrap_phase Unwrap the phase patter. Prevents annular structure in phase pattern. Default is False.
+        @param correct_phase Correct the phase for offset from the center of the reflector along the normal, or along a 3-vector direction.  Sign of the int sets the direction of the phase factor to apply.
         @param ret Return the Figure and Axis object. Only called by GUI. Default is False.
         
         @returns fig Figure object.
@@ -2353,10 +2379,13 @@ class System(object):
 
         plotObject = self.system[name_surface]
 
+        if title is None:
+            title = f"{name_obj} {comp.name}"
+
         fig, ax = PPlot.plotBeam2D(plotObject, field_comp, contour_pl,
                         vmin, vmax, levels, amp_only,
                         norm, aperDict, scale, project,
-                        units, titleA, titleP, unwrap_phase)
+                        units, title, titleA, titleP, unwrap_phase, correct_phase, field.k)
         if ret:
             return fig, ax
 
@@ -2369,7 +2398,7 @@ class System(object):
 
     def plot3D(self, name_surface : str, cmap : cm = cm.cool,
             norm : bool = False, fine : int = 2, show : bool = True, foc1 : bool = False, 
-            foc2 : bool = False, save : bool = False, ret : bool = False
+            foc2 : bool = False, save : bool = False, ret : bool = False, units : Unit = Units.MM
             ) -> tuple[pt.Figure, pt.Axes]:
         """!
         Plot a 3D reflector.
@@ -2399,12 +2428,12 @@ class System(object):
             for n_s in name_surface:
                 PChecks.check_elemSystem(n_s, self.system, self.clog, extern=True)
                 plotObject = self.system[n_s]
-                PPlot.plot3D(plotObject, ax, fine, cmap, norm, foc1, foc2)
+                PPlot.plot3D(plotObject, ax, fine, cmap, norm, foc1, foc2, units=units)
         
         else:
             PChecks.check_elemSystem(name_surface, self.system, self.clog, extern=True)
             plotObject = self.system[name_surface]
-            PPlot.plot3D(plotObject, ax, fine, cmap, norm, foc1, foc2)
+            PPlot.plot3D(plotObject, ax, fine, cmap, norm, foc1, foc2, units=units)
 
         if ret:
             return fig, ax
@@ -2418,7 +2447,7 @@ class System(object):
 
     def plotSystem(self, cmap : cm = cm.cool, norm : bool = False, fine : int = 2, show : bool = True, foc1 : bool = False, 
                    foc2 : bool = False, save : bool = False, ret : bool = False, select : list[str] = None, RTframes : list[str] = None, 
-                   RTcolor : str = "black"
+                   RTcolor : str = "black", units : Unit = Units.MM
                 ) -> tuple[pt.Figure, pt.Axes]:
         """!
         Plot the current system. Plots the reflectors and optionally ray-trace frames in a 3D plot.
@@ -2466,7 +2495,7 @@ class System(object):
 
         fig, ax = pt.subplots(figsize=(10,10), subplot_kw={"projection": "3d"})
         PPlot.plotSystem(plotDict, ax, fine, cmap,norm,
-                    foc1, foc2, _RTframes, RTcolor)
+                    foc1, foc2, _RTframes, RTcolor, units=units)
 
         if ret:
             return fig, ax
@@ -2478,7 +2507,7 @@ class System(object):
         elif show:
             pt.show()
     
-    def plotGroup(self, name_group : str, show : bool = True, ret : bool = False) -> tuple[pt.Figure, pt.Axes]:
+    def plotGroup(self, name_group : str, show : bool = True, ret : bool = False, units : Unit = Units.MM) -> tuple[pt.Figure, pt.Axes]:
         """!
         Plot a group of reflectors.
         
@@ -2501,7 +2530,7 @@ class System(object):
             fig, ax = self.plotSystem(select=select, show=False, ret=True)
             return fig,ax
         else:
-            self.plotSystem(select=select, show=show)
+            self.plotSystem(select=select, show=show, units=units)
 
     def plotRTframe(self, name_frame : str, project : Projections = Projections.xy, ret : bool = False, aspect : float = 1, units : Units = Units.MM):
         """!
@@ -2526,7 +2555,7 @@ class System(object):
         if ret:
             return PPlot.plotRTframe(self.frames[name_frame], project, self.savePath, ret, aspect, units)
         else:
-            PPlot.plotRTframe(self.frames[name_frame], project, self.savePath, ret, aspect, units)
+            PPlot.plotRTframe(self.frames[name_frame], project, self.savePath, ret, aspect, units = units)
 
     def findRTfocus(self, name_frame : str, f0 : float = None, tol : float = 1e-12) -> np.ndarray:
         """!

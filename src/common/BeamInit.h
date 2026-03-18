@@ -307,10 +307,7 @@ void initGauss(T gdict, U refldict, V *res_field, V *res_current)
     Utils<G> ut;
 
     bool transform = true;
-    printf("initGauss calling generateGrid\n");
     generateGrid(refldict, &reflc, transform);
-
-    printf("initGauss returned from generateGrid\n");
 
     G zRx      = M_PI * gdict.w0x*gdict.w0x * gdict.n / gdict.lam;
     G zRy      = M_PI * gdict.w0y*gdict.w0y * gdict.n / gdict.lam;
@@ -439,6 +436,8 @@ void initGaussBeam(T gdict, U refldict, V *res_field, V *res_current)
     G k = 2* M_PI / gdict.lam;
     // zc, the confocal distance
     G zc = k*gdict.w0*gdict.w0/2.0;
+
+    G Factor;
     
     // R, the complex 3-vector distance from the reflector to the source
     std::array<std::complex <G>, 3> R;
@@ -486,13 +485,13 @@ void initGaussBeam(T gdict, U refldict, V *res_field, V *res_current)
         kr_sum_3 = (j*kr_inv + kr_inv*kr_inv);
 
         // Calculate the E and H fields
-        efield[0] = prefactor*expo*(kr_sum_1 + kr_sum_2*(R[0]*R[0] / (r*r)) - kr_sum_3*(R[2] / r));
+        efield[0] = -prefactor*expo*(kr_sum_1 + kr_sum_2*(R[0]*R[0] / (r*r)) - kr_sum_3*(R[2] / r));
         efield[1] = prefactor*expo*kr_sum_2*R[0]*R[1]/(r*r);
-        efield[2] = prefactor*expo*(kr_sum_2*R[0]*R[2]/(r*r) + kr_sum_3*R[0]/r);
+        efield[2] = -prefactor*expo*(kr_sum_2*R[0]*R[2]/(r*r) + kr_sum_3*R[0]/r);
 
-        hfield[0] = prefactor*expo*kr_sum_2*R[0]*R[1]/(r*r);
+        hfield[0] = -prefactor*expo*kr_sum_2*R[0]*R[1]/(r*r);
         hfield[1] = prefactor*expo*(kr_sum_1 + kr_sum_2*(R[1]*R[1] / (r*r)) - kr_sum_3*(R[2] / r));
-        hfield[2] = prefactor*expo*(kr_sum_2*R[1]*R[2]/(r*r) + kr_sum_3*R[1]/r);
+        hfield[2] = -prefactor*expo*(kr_sum_2*R[1]*R[2]/(r*r) + kr_sum_3*R[1]/r);
 
         // Calculate the M and J currents
         n_source[0] = reflc.nx[i];
@@ -512,7 +511,7 @@ void initGaussBeam(T gdict, U refldict, V *res_field, V *res_current)
 
         res_field->r1z[i] = efield[2].real();
         res_field->i1z[i] = efield[2].imag();
-
+    
         // Fill H-field
         res_field->r2x[i] = hfield[0].real();
         res_field->i2x[i] = hfield[0].imag();
@@ -524,24 +523,55 @@ void initGaussBeam(T gdict, U refldict, V *res_field, V *res_current)
         res_field->i2z[i] = hfield[2].imag();
 
         // Fill electric currents
-        res_current->r1x[i] = J[0].real();
-        res_current->i1x[i] = J[0].imag();
+        if ((gdict.mode == 0) or (gdict.mode == 2))
+        {
+            Factor = 2;
+        } else {
+            Factor = 1;
+        }
 
-        res_current->r1y[i] = J[1].real();
-        res_current->i1y[i] = J[1].imag();
+        if ((gdict.mode == 0) or (gdict.mode == 2))
+        { // Full or PEC mode
+            res_current->r1x[i] = Factor*J[0].real();
+            res_current->i1x[i] = Factor*J[0].imag();
 
-        res_current->r1z[i] = J[2].real();
-        res_current->i1z[i] = J[2].imag();
+            res_current->r1y[i] = Factor*J[1].real();
+            res_current->i1y[i] = Factor*J[1].imag();
+
+            res_current->r1z[i] = Factor*J[2].real();
+            res_current->i1z[i] = Factor*J[2].imag();
+        } else {
+            res_current->r1x[i] = 0.0;
+            res_current->i1x[i] = 0.0;
+
+            res_current->r1y[i] = 0.0;
+            res_current->i1y[i] = 0.0;
+
+            res_current->r1z[i] = 0.0;
+            res_current->i1z[i] = 0.0;
+        }
 
         // Fill magnetic currents
-        res_current->r2x[i] = -M[0].real();
-        res_current->i2x[i] = -M[0].imag();
+        if ((gdict.mode == 0) or (gdict.mode == 1))
+        { // Full or PMC mode
+            res_current->r2x[i] = -Factor*M[0].real();
+            res_current->i2x[i] = -Factor*M[0].imag();
 
-        res_current->r2y[i] = -M[1].real();
-        res_current->i2y[i] = -M[1].imag();
+            res_current->r2y[i] = -Factor*M[1].real();
+            res_current->i2y[i] = -Factor*M[1].imag();
 
-        res_current->r2z[i] = -M[2].real();
-        res_current->i2z[i] = -M[2].imag();
+            res_current->r2z[i] = -Factor*M[2].real();
+            res_current->i2z[i] = -Factor*M[2].imag();
+        } else {
+            res_current->r2x[i] = 0.0;
+            res_current->i2x[i] = 0.0;
+
+            res_current->r2y[i] = 0.0;
+            res_current->i2y[i] = 0.0;
+
+            res_current->r2z[i] = 0.0;
+            res_current->i2z[i] = 0.0;
+        }
     }
     
     delete reflc.x;
