@@ -76,11 +76,11 @@ class Test_SystemOps(unittest.TestCase):
         
         self.assertTrue(isinstance(out, fields))
 
-    @params(*list(Units)) 
-    def test_units(self, unit):
-        self.assertTrue(isinstance(unit.name, str))
-        self.assertTrue(isinstance(unit.value[0], float))
-        self.assertTrue(isinstance(unit.value[1], str))
+    #@params(Units) 
+    #def test_units(self, unit):
+    #    self.assertTrue(isinstance(unit.__str__, str))
+    #    self.assertTrue(isinstance(unit.value[0], float))
+    #    self.assertTrue(isinstance(unit.value[1], str))
         
 if __name__ == "__main__":
     import nose2

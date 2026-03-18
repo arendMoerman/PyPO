@@ -491,7 +491,7 @@ def plotSystem(systemDict, ax, fine, cmap,norm,
                 y.append(frame.y[i])
                 z.append(frame.z[i])
 
-            ax.plot(x/units, y/units, z/units, color=RTcolor, zorder=100, lw=0.7)
+            ax.plot(np.array(x)/units, np.array(y)/units, np.array(z)/units, color=RTcolor, zorder=100, lw=0.7)
 
 
     #set_axes_equal(ax)
@@ -529,9 +529,9 @@ def plotBeamCut(x_cut, y_cut, x_strip, y_strip, vmin, vmax, units, scale=Scales.
     ax.set_ylim(vmin, vmax)
 
     ax.set_xlabel(f"$\\theta$ ({units.name})")
-    if scale.name is 'dB':
+    if scale.name == 'dB':
         ax.set_ylabel("Power (dB)")
-    elif scale.name is 'LIN':
+    elif scale.name == 'LIN':
         ax.set_ylabel("Power (Watts)")
     else:
         ax.set_ylabel("Amplitude (√W)")
