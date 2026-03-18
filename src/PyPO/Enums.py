@@ -20,16 +20,6 @@ class CustomEnumString(Enum):
     
     def __rtruediv__(self, other):
         return NotImplemented
-
-class CustomEnumTuple(Enum):
-    def __str__(self):
-        return self.name
-    
-    def __rmul__(self, other):
-        return other * self.value[0]
-    
-    def rdiv(self, other):
-        return other / self.value[0]
     
 class Unit(float):
     """!
