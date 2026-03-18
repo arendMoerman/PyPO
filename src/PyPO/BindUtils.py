@@ -531,6 +531,7 @@ def allfill_vecGPODict(res, gdict_py, ct_t):
     res.z = ct_t(gdict_py["z"])
     res.n = ct_t(gdict_py["n"])
     res.power = ct_t(gdict_py["power"])
+    res.mode = ctypes.c_int(gdict_py["mode"])
 
 
 def allfill_SGPODict(res, sgdict_py, ct_t):

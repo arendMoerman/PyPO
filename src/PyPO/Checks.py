@@ -15,6 +15,7 @@ from PyPO.Enums import FieldComponents, CurrentComponents, AperShapes, Objects
 
 nThreads_cpu = os.cpu_count() - 1 if os.cpu_count() > 1 else 1
 PO_modelist = ["JM", "EH", "JMEH", "EHP", "FF", "scalar"]
+Beam_modelist = ["full", "pmc", "pec"]
 
 def getIndex(name, nameList):
     """!
@@ -1264,6 +1265,22 @@ def check_vecGPODict(vecGPODict, nameList, clog):
             errStr += errMsg_type("power", type(vecGPODict["power"]), "vecGPODict", [float, int])
     else:
         vecGPODict["power"] = 4*np.pi
+        
+    if "mode" in vecGPODict:
+        if not ((isinstance(vecGPODict["mode"], int)) or (isinstance(vecGPODict["mode"], str)) ):
+            errStr += errMsg_type("mode", type(vecGPODict["mode"]), "vecGPODict", [str, int])
+        if (isinstance(vecGPODict['mode'], str)):
+            if vecGPODict['mode'].lower() not in Beam_modelist:
+                errStr += errMsg_value('mode', vecGPODict['mode'], 'vecGPODict')
+            else:
+                vecGPODict['mode'] = Beam_modelist.index(vecGPODict['mode'].lower())
+        else:
+            if vecGPODict['mode'] not in range(3):
+                errStr += errMsg_value('mode', vecGPODict['mode'], 'vecGPODict')
+    else:
+        errStr += warnMsg_field('mode', 'vecGPODict', 'No mode given, assuming PEC')
+        vecGPODict['mode'] = 2
+        
 
 def calc_beam(vecGPODict, errStr):
     """!

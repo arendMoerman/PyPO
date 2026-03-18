@@ -115,6 +115,7 @@ vecGPODict = {
         "R"         : "Radius of phase curvature in the x direction (real). Calculated from `w0`, `w`, `z` if any pair are set. Ignored if <0.01 `lam`.",
         "n"         : "Refractive index of medium. Defaults to 1.0.",
         "power"     : "Total power contained in the beam (real). Defaults to 4pi if not set.",
+        "mode"      : "Mode to create beam in. One of 'full', 'PEC', 'PMC'"
         }
 
 ##

@@ -2,7 +2,7 @@
 @file
 File containing enum types for PyPO methods.
 """
-
+from dataclasses import dataclass
 from enum import Enum
 
 import numpy as np
@@ -30,6 +30,30 @@ class CustomEnumTuple(Enum):
     
     def rdiv(self, other):
         return other / self.value[0]
+    
+class Unit(float):
+    """!
+    A custom float with extra metadata that is useful for units.
+    
+    This subclass of float adds meta data for the name of the unit and
+    the dimension that it applies to."""
+    def __new__(self, value, name, dimension):
+        return float.__new__(self, value)
+    
+    def __init__(self, value, name, dimension):
+        float.__init__(value)
+        self.name = name
+        self.dimension = dimension
+        
+    @property
+    def value(self):
+        return self, self.dimension
+    
+    def __str__(self):
+        return self.name
+    
+    def __repr__(self):
+        return f"{self:.3g} {self.name:s}"
 
 class FieldComponents(CustomEnumScalar):
     """!
@@ -106,7 +130,8 @@ class Projections(CustomEnumScalar):
     zy = 4
     xz = 5
 
-class Units(CustomEnumTuple):
+@dataclass
+class Units:
     """!
     Enum types for units for display and conversion.
     
@@ -134,22 +159,22 @@ class Units(CustomEnumTuple):
     @ingroup public_api_argopts
     """
     
-    M = (1e3, "spatial")
-    CM = (1e-2*M[0], "spatial")
-    MM = (1e-3*M[0], "spatial")
-    UM = (1e-6*M[0], "spatial")
-    NM = (1e-9*M[0], "spatial")
-    IN = (25.4*MM[0], "spatial")
-    MIL = (IN[0]*1e-3, "spatial")
-    THOU = (IN[0]*1e-3, "spatial")
-    UIN = (IN[0]*1e-6, "spatial")
-    FT = (12*IN[0], "spatial")
-    DEG = (1., "angular")
-    AM = (1/60., "angular")
-    AS = (1/3600., "angular")
-    RAD = (180/np.pi*DEG[0], "angular")
-    MRAD = (RAD[0]*1e-3, "angular")
-    URAD = (RAD[0]*1e-6, "angular")
+    M = Unit(1e3, "m", "spatial")
+    CM = Unit(1e-2*M, 'cm', "spatial")
+    MM = Unit(1e-3*M, 'mm', "spatial")
+    UM = Unit(1e-6*M, 'μm', "spatial")
+    NM = Unit(1e-9*M, 'nm', "spatial")
+    IN = Unit(25.4*MM, 'in', "spatial")
+    MIL = Unit(IN*1e-3, 'mil', "spatial")
+    THOU = Unit(IN*1e-3, 'thou', "spatial")
+    UIN = Unit(IN*1e-6, 'μin', "spatial")
+    FT = Unit(12*IN, 'ft', "spatial")
+    DEG = Unit(1., '°', "angular")
+    AM = Unit(1/60., "'", "angular")
+    AS = Unit(1/3600., '"', "angular")
+    RAD = Unit(180/np.pi*DEG, 'rad', "angular")
+    MRAD = Unit(RAD*1e-3, 'mrad', "angular")
+    URAD = Unit(RAD*1e-6, 'μrad', "angular")
 
 class Scales(CustomEnumScalar):
     """!
