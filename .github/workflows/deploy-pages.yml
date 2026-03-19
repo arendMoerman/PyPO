@@ -1,28 +1,117 @@
-#name: Deploy docs to github pages
-#
-#on:
-#  push:
-#    branches:
-#      - main    # runs after PRs are merged
-#
-#permissions:
-#  contents: read
-#  pages: write
-#  id-token: write
-#
-## idk what this does
-#concurrency:
-#  group: "pages"
-#  cancel-in-progress: false
-#
-#jobs:
-#  deploy:
-#    #needs: build
-#    runs-on: ubuntu-latest
-#    environment:
-#      name: github-pages
-#      url: ${{ steps.deployment.outputs.page_url }}
-#    steps:
-#      - name: Deploy to GitHub Pages
-#        id: deployment
-#        uses: actions/deploy-pages@v4
+name: Deploy docs to github pages
+
+on:
+  push:
+    branches:
+      - main    # runs after PRs are merged
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# idk what this does
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    #needs: build
+    runs-on: ubuntu-latest
+    # ???
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      GH_DEBUG: api
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Deploy to GitHub Pages
+        run: |
+          repo=maybeetree/PyPO-fork
+
+          # echo to stderr
+          eecho() {
+                  echo "$@" >&2
+          }
+
+          # echo to stderr and exit with error
+          die() {
+                  eecho "$@"
+                  exit 1
+          }
+
+          test "$GITHUB_SHA" || die 'GITHUB_SHA missing!'
+          test "$GH_TOKEN" || die 'GH_TOKEN missing!'
+
+          #gh api "repos/$repo/actions/runs" > \
+          #	archive/gh-api-sample-repos-actions-runs.json
+
+          run_id="$(gh api "repos/$repo/actions/runs" --jq \ '
+                  .workflow_runs |
+                  map(select(
+                          .path == ".github/workflows/on-pull-request.yml"
+                          and
+                          .conclusion == "success"
+                          )) |
+                  sort_by(.head_commit.timestamp)
+                          .[-1]
+                          .id
+                  ' 
+                  )" || die "Failed to get last run ID"
+
+          test "$run_id" || die "Failed to get last run ID"
+
+          echo "Run ID: $run_id"
+
+          #gh api "repos/$repo/actions/runs/$run_id/artifacts" > \
+          #	archive/gh-api-sample-repos-actions-runs-artifacts.json
+
+          artifact_id="$(gh api "repos/$repo/actions/runs/$run_id/artifacts" --jq '
+                  .artifacts |
+                  map(select(
+                          .name == "github-pages"
+                          ))
+                  .[0]
+                  .id
+                  '
+                  )" || die "Failed to get artifact id"
+
+          test "$artifact_id" || die "Failed to get artifact id"
+
+          echo "Artifact ID: $artifact_id"
+
+          #gh api \
+          #  --method POST \
+          #  "/repos/$repo/pages" \
+          #  -f 'build_type=workflow' \
+          #  || die "failed to enable pages."
+
+          oidc_token="$(
+            curl -sSL \
+              -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL" | \
+            jq -r '.value'
+            )" || die "Failed to get OIDC token"
+
+          test "$oidc_token" || die "Failed to get OIDC token"
+
+          echo "OIDC token length: $(echo -n "$oidc_token" | wc -c)"
+
+          # error 404 -> pages not enabled thru actions
+          # error 500 with " unexpected end of JSON input"
+          #   -> using github token instead of OIDC token
+
+          gh api \
+                  --method POST \
+                  /repos/$repo/pages/deployments \
+                  --field "artifact_id=$artifact_id" \
+                  -f 'environment=github-pages' \
+                  -f pages_build_version="$GITHUB_SHA" \
+                  -f oidc_token="$oidc_token" \
+                  || die "Failed to deploy pages."
+
+
+
+
