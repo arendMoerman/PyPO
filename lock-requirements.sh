@@ -2,6 +2,9 @@
 
 set -e
 
+rm -f requirements.txt
+rm -f requirements-dev.txt
+
 # Save normal end user requirements.
 # Also save the build deps (i.e. setuptools).
 pip-compile \

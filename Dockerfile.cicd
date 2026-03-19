@@ -13,6 +13,8 @@ RUN \
 		python3.8-venv \
 		doxygen \
 		cmake \
+		gcc \
+		g++ \
 		pandoc \
 		`# LaTeX and a bunch of pkgs required by... ` \
 		`# the unit tests?????? HUH???? ` \

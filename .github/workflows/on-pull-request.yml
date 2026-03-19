@@ -59,6 +59,18 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Run Tests
+        uses: addnab/docker-run-action@v3
+        with:
+          image: pypo-cicd:latest
+          run: |
+            set -e
+            . /venv/bin/activate
+            pip install -r requirements-dev.txt -e .[dev]
+            nose2
+          options: -v ${{ github.workspace }}:/app
+
+
       - name: Build Docs
         uses: addnab/docker-run-action@v3
         with:
