@@ -63,7 +63,9 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: pypo-cicd:latest
-          run: /venv/bin/python ./GenerateDocs.py -tgd
+          run: |
+            . /venv/bin/activate
+            ./GenerateDocs.py -tgd
           options: -v ${{ github.workspace }}:/app
 
       - name: Upload docs artifact
