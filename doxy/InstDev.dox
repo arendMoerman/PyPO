@@ -1,35 +1,48 @@
 /**
 \page contribguide Instructions For Contributions & Development
-This page contains an overview of instructions for people intending to develop `PyPO`.
-These include the contributor guidelines, but also guidelines on how to document contributions and how to test `PyPO`.
+
+This page contains an overview of instructions for people intending to develop
+`PyPO`. These include the contributor guidelines, but also guidelines on how to
+document contributions and how to test `PyPO`.
 
 \section contrib Contributor Guidelines
-People wishing to contribute are more than welcome to do so. Contributions can be made by opening a pull request to the main repository from your own fork of `PyPO`.
-This is the so-called [fork-and-branch workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
-Create a fork from the [PyPO repository](https://github.com/PyPO-dev/PyPO) to your own profile, and clone:
+
+People wishing to contribute are more than welcome to do so.
+Contributions can be made by opening a pull request to the main repository from
+your own fork of `PyPO`.
+This is the so-called
+[fork-and-branch workflow](https://blog.scottlowe.org/2015/01/27/using-fork-branch-git-workflow/).
+Create a fork from the
+[PyPO repository](https://github.com/PyPO-dev/PyPO)
+to your own profile, and clone:
+
 ```
 git clone <URL-to-your-PyPO-fork>
 ```
 
 Set the original repo as upstream:
+
 ```
 git remote add upstream https://github.com/PyPO-dev/PyPO
 ```
 
 It is good practice to make a feature branch in which you can store your work:
+
 ```
 git checkout -b <new-branch-name>
 ```
 
 Then, when it is time to push the changes to the original repo, run:
+
 ```
 git push origin <new-branch-name>
 ```
 
-This should prompt Github to ask you to open a pull request to the orignial repository.
-Open the pull request, and the contribution will be reviewed. 
-If it is accepted, the changes will be merged into the original main branch.
-After the merge, do not forget to synchronise your remote/local copy:
+This should prompt Github to ask you to open a pull request to the orignial
+repository. Open the pull request, and the contribution will be reviewed. If it
+is accepted, the changes will be merged into the original main branch. After
+the merge, do not forget to synchronise your remote/local copy:
+
 ```
 git checkout main
 git pull upstream main
@@ -37,31 +50,46 @@ git push origin main
 ```
 
 Then, the feature branch can be deleted:
+
 ```
 git branch -d <new-branch-name>
 git push --delete origin <new-branch-name>
 ```
 
 \section issues Issues, Feauture Requests & Bugs
-Issues, feature requests and bugs can be reported in the `PyPO` [issue tracker](https://github.com/arend95/PyPO/issues).
-In addition to the online issue tracker in the git repo, we maintain a \ref common_issues "list of commonly encountered issues" for quick reference.
+
+Issues, feature requests and bugs can be reported in the `PyPO`
+[issue tracker](https://github.com/arend95/PyPO/issues).
+In addition to the online issue tracker in the git repo,
+we maintain a \ref common_issues "list of commonly encountered issues"
+for quick reference.
 
 \section devinstructions Instructions For Developers
-As mentioned in the contributor guidelines, contributions to `PyPO` are more than welcome. 
-This section contains information on utilities put in place to make it easier to develop, as well as certain rules and practices for making `PyPO` easy to maintain.
 
-It is assumed that you have forked the PyPO repository to a root directory, which we will call PyPO-dev for now.
+As mentioned in the contributor guidelines,
+contributions to `PyPO` are more than welcome. 
+This section contains information on utilities put in place to make it easier
+to develop, as well as certain rules and practices for making `PyPO` easy to
+maintain.
+
+It is assumed that you have forked the PyPO repository to a root directory,
+which we will call PyPO-dev for now.
 
 \subsection devinstall_page Dev Install
+
 Installing `PyPO` for development is very similar to general installation:
 Navigate to the cloned (and forked) PyPO repository and run:
 ```
 pip install -e .
 ```
 
-The "-e" flag tells pip to install `PyPO` in the actual "src/PyPO/" directory of the `PyPO` repository. 
-This means that any changes to the Python source code are immediately reflected in the package imported through Python.
-For the C/C++/CUDA code, this is not true. These scripts need to be compiled into libraries again (which happens when the `pip install -e .` command is run)
+The "-e" flag tells pip to install `PyPO` in the actual "src/PyPO/" directory
+of the `PyPO` repository. 
+This means that any changes to the Python source code are immediately reflected
+in the package imported through Python.
+For the C/C++/CUDA code, this is not true.
+These scripts need to be compiled into libraries again
+(which happens when the `pip install -e .` command is run)
 before the changes are reflected in the package.
 
 PyPO can be uninstalled by running:
@@ -69,16 +97,21 @@ PyPO can be uninstalled by running:
 pip uninstall PyPO-pkg 
 ```
 
-Note that this does not remove the compiled libraries in the "src/PyPO/" folder. If desired, these need to be removed manually.
+Note that this does not remove the compiled libraries in the "src/PyPO/"
+folder. If desired, these need to be removed manually.
 
 
 \subsection gendoc Generating Documentation
-`PyPO` documentation is generated using Doxygen and generated from comment blocks.
-Because of this, there are several rules for developers regarding comments.
+
+`PyPO` documentation is generated using Doxygen and generated from comment
+blocks. Because of this, there are several rules for developers regarding
+comments.
 
 \subsubsection cppcuda_docs C/C++ And CUDA Source
-The C/C++/CUDA scripts use the so-called [Javadoc](https://en.wikipedia.org/wiki/Javadoc) style
-for documenting classes and methods:
+
+The C/C++/CUDA scripts use the so-called
+[Javadoc](https://en.wikipedia.org/wiki/Javadoc)
+style for documenting classes and methods:
 ```
 /**
  * Here comes a short description describing in keywords what the function does
@@ -97,8 +130,12 @@ outputObject someFunc(inputObject input) {
 }
 ```
 
-In addition to properly documented classes and methods, each file should include a file description with an appropriate tag, so that doxygen can include the file in the \ref fulldocs "full software documentation". 
-The file description should be given after includes/preprocessor statements, but before the first class or method is declared:
+In addition to properly documented classes and methods, each file should
+include a file description with an appropriate tag, so that doxygen can include
+the file in the \ref fulldocs "full software documentation". 
+The file description should be given after includes/preprocessor statements,
+but before the first class or method is declared:
+
 ```
 <includes/preprocessor statements up here...>
 
@@ -113,8 +150,10 @@ The file description should be given after includes/preprocessor statements, but
 
 \subsubsection python_docs Python Source
 
-The Python classes and methods are documented using docstrings with a slight twist, as Doxygen's special commands are not supported using pure docstrings.
-The trick to making doxygens special commands work with docstrings, is placing an exclamation mark right after the first triple double quotes:
+The Python classes and methods are documented using docstrings with a slight
+twist, as Doxygen's special commands are not supported using pure docstrings.
+The trick to making doxygens special commands work with docstrings, is placing
+an exclamation mark right after the first triple double quotes:
 ```
 def someFunc(inputObject):
     """!
@@ -133,8 +172,10 @@ def someFunc(inputObject):
     return output
 ```
 
-The exclamation mark tells doxygen to parse the docstring as a doxygen documentation block. 
-This allows doxygen to generate documentation, while also allowing the built-in `help()` function of Python to recognise the docstring, albeit with a lone "!" prepending the output of `help()`.
+The exclamation mark tells doxygen to parse the docstring as a doxygen
+documentation block. This allows doxygen to generate documentation, while also
+allowing the built-in `help()` function of Python to recognise the docstring,
+albeit with a lone "!" prepending the output of `help()`.
 
 File descriptions go on the top of the file:
 ```
@@ -149,8 +190,11 @@ If needed, provide a detailed description here.
 <rest of script down here...>
 ```
 
-Again, adding these file descriptions is important, otherwise the file will not be parsed and added to the \ref fulldocs "full software documentation".
-Tests are also supposed to carry a file description, but the test functions do not need a full documentation.
+Again, adding these file descriptions is important, otherwise the file will not
+be parsed and added to the \ref fulldocs "full software documentation".
+Tests
+are also supposed to carry a file description, but the test functions do not
+need a full documentation.
 
 The "Templates.py" file containing templates for all used dictionary inputs is documented in the following style:
 
@@ -166,41 +210,62 @@ dict = {
 }
 ```
 
-It is important to add the `@ingroup public_api_templates` command to the documentation block, as this puts the documentation on the right page in the final HTML output.
-Also, if you add a new input dictionary type, please document the meaning of each field in the demonstrated way.
+It is important to add the
+`@ingroup public_api_templates`
+command to the documentation block, as this puts the documentation on the right
+page in the final HTML output.
+Also, if you add a new input dictionary type,
+please document the meaning of each field in the demonstrated way.
 
 \subsubsection extra_reading Extra Reading
 
-For an overview of the mentioned (and other) comment styles for doxygen, see [this link](https://www.doxygen.nl/manual/docblocks.html).
+For an overview of the mentioned (and other) comment styles for doxygen, see
+[this link](https://www.doxygen.nl/manual/docblocks.html).
 
 \subsubsection generating_docs Generating Documentation                                                                                
                                                                                                                                        
-The software API documentation can be generated using the `GenerateDocs.py` script:                                                    
+The software API documentation can be generated using the
+`GenerateDocs.py` script:                                                    
 ```                                                                                                                                    
 python3 GenerateDocs.py                                                                                                                
 ```                                                                                                                                    
                                                                                                                                        
-In order to also generate other types of documentation, such as tutorials and demonstrations, certain flags need to be passed.         
-The jupyer-notebook tutorial documentation is generated by passing the `-h` flag, the GUI tutorials are generated with the `-g` flag,  
-and the demonstrations are generated with the `-d` flag. The following one-liner does all:                                             
+In order to also generate other types of documentation,
+such as tutorials and demonstrations,
+certain flags need to be passed.
+The jupyer-notebook tutorial documentation is generated
+by passing the `-h` flag, the GUI tutorials
+are generated with the `-g` flag,  and the demonstrations are generated with
+the `-d` flag.
+The following one-liner does all:                                             
+
 ```                                                                                                                                    
 python3 GenerateDocs.py -tgd                                                                                                           
 ```                                                                                                                                    
                                                                                                                                        
-Using these flags, it is not necessary to generate everything. This saves a lot of time if you only need to generate, say, the software
+Using these flags, it is not necessary to generate everything. This saves a lot
+of time if you only need to generate, say, the software
 API. The jupyter-notebooks take long. Really long.                                                                                     
                                                                                                                                        
 After running, the output is placed in the `docs` directory.                                                                           
-The documentation can be checked off-line by navigating your `docs` directory and running `index.html`.                                
+The documentation can be checked off-line by navigating your
+`docs` directory and running `index.html`.                                
                                                                                                                                        
 Note that generating documentation requires a local doxygen install.                                                                   
-Please see their [installation page](https://www.doxygen.nl/manual/install.html) for installation instructions.  
+Please see their
+[installation page](https://www.doxygen.nl/manual/install.html)
+for installation instructions.  
+
 \subsection runtests Running The Automated Tests
 \subsubsection runtests_python Python
-`PyPO` contains an automated testing suite that can be run quite easily from the command line using nose2.
-Note that, in order to run the unit tests, `PyPO` should be installed in \ref devinstall_page "development mode".
+
+`PyPO` contains an automated testing suite that can be run quite easily
+from the command line using nose2.
+Note that, in order to run the unit tests,
+`PyPO` should be installed in \ref devinstall_page "development mode".
 
 Navigate to the `PyPO` root directory and run:
+
 ```
 nose2
 ```
@@ -208,48 +273,67 @@ nose2
 This command will execute the entire testing suite.
 
 Note that nose2 needs to be installed for this:
+
 ```
 pip install nose2
 ```
 
-Apart from running the test suite, it is also possible to generate a coverage report afterwards.
-For this, coverage needs to be installed in addition to nose2:
+Apart from running the test suite, it is also possible to generate a coverage
+report afterwards. For this, coverage needs to be installed in addition to
+nose2:
+
 ```
 pip install coverage
 ```
 
 The coverage report can then be generated by running:
+
 ```
 nose2 --with-coverage
 ```
 
-and the coverage report will be displayed in the terminal after running the tests.
+and the coverage report will be displayed in the terminal after running the
+tests.
 
 If desired, further coverage info can be obtained by running:
 ```
 coverage html
 ```
 
-in the `PyPO` root directory. Then, in-depth coverage information can be viewed by running the `index.html` file in the `htmlconv/` folder in the `PyPO` root directory.
+in the `PyPO` root directory. Then, in-depth coverage information can be viewed
+by running the `index.html` file in the `htmlconv/` folder in the `PyPO` root
+directory.
 
 \subsubsection runtests_cpp C/C++/CUDA
-A small suite of unittests for the C/C++/CUDA backend is also present and is tested using [googletest](https://google.github.io/googletest/). 
-These tests are mostly testing the vector operations, but might be extended as `PyPO` keeps developing. 
-If you intend to work on the backend, it might be a good thing to be able to run these tests.
-Please see the [installation instructions](https://github.com/google/googletest/blob/main/googletest/README.md) for building googletest on your specific platform.
+
+A small suite of unittests for the C/C++/CUDA backend is also present and
+is tested using
+[googletest](https://google.github.io/googletest/). 
+These tests are mostly testing the vector operations,
+but might be extended as `PyPO` keeps developing. 
+If you intend to work on the backend,
+it might be a good thing to be able to run these tests.
+Please see the
+[installation instructions](https://github.com/google/googletest/blob/main/googletest/README.md)
+for building googletest on your specific platform.
 
 After installing googletest, the tests need to be built. 
 Navigate to the `src/` folder and run:
+
 ```
 python3 SetupGTest.py -bmr
 ```
 
 which should generate build scripts, make them and run the unittests in one go.
 For more options for the `SetupGTest.py` script, run:
+
 ```
 python3 SetupGTest.py -h
 ```
 
-Note that most backend functionality is implicitly tested through the (larger) Python unittesting suite, and if not developing in the C/C++/CUDA backend, the Python unittesting suite should be sufficient to test correct functioning of `PyPO`.
+Note that most backend functionality is implicitly tested through the (larger)
+Python unittesting suite, and if not developing in the C/C++/CUDA backend, the
+Python unittesting suite should be sufficient to test correct functioning of
+`PyPO`.
 
 */
