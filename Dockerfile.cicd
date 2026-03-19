@@ -14,6 +14,16 @@ RUN \
 		doxygen \
 		cmake \
 		pandoc \
+		`# LaTeX and a bunch of pkgs required by... ` \
+		`# the unit tests?????? HUH???? ` \
+		texlive-latex-base \
+		texlive-bibtex-extra \
+		`# type1cm.sty` \
+		texlive-latex-extra \
+		`# type1ec.sty` \
+		cm-super-minimal \
+		`# siunitx.sty` \
+		texlive-science \
 		&& \
 	:
 
