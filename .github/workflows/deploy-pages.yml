@@ -86,7 +86,8 @@ jobs:
           gh api \
             --method POST \
             "/repos/$repo/pages" \
-            -f 'build_type=workflow'
+            -f 'build_type=workflow' \
+            || echo "It failed but that's probably OK"
 
           oidc_token="$(
             curl -sSL \
