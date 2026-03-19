@@ -82,11 +82,19 @@ jobs:
 
           echo "Artifact ID: $artifact_id"
 
+<<<<<<< Updated upstream
           #gh api \
           #  --method POST \
           #  "/repos/$repo/pages" \
           #  -f 'build_type=workflow' \
           #  || die "failed to enable pages."
+=======
+          echo "Attempt enabling pages..."
+          gh api \
+            --method POST \
+            "/repos/$repo/pages" \
+            -f 'build_type=workflow'
+>>>>>>> Stashed changes
 
           oidc_token="$(
             curl -sSL \
