@@ -52,6 +52,7 @@ extras_require = {
         "nose2",
         "coverage",
         "pip-tools",
+        "jupyter",
         ],
 }
 
