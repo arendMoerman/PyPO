@@ -1,12 +1,9 @@
 name: Run docs and tests
 
 on:
-  push:
-    paths:
-      - Dockerfile
-      - .github/workflows/build-image.yml
+  pull_request:
     branches:
-      - 'main'
+      - main
 
 permissions:
   contents: read
