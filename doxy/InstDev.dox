@@ -347,11 +347,14 @@ a merged pull request),
 and deploys the documentation built in the first workflow
 to GitHub pages.
 
-The `deploy-pages.yml` workflow automatically configures the repo
-to use Pages deployment via workflow;
-manual configuration is not necessary.
-However,
-it is advised to
+For the Github Pages workflow to work correctly,
+it is necessary to enable Github Pages
+in the repository
+and set the publishing source to workflow (not a branch).
+This is documented
+[here](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
+
+It is also advised to
 [enable "Require Status Checks"](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule)
 in the repository settings
 to prevent pull requests that break the docs

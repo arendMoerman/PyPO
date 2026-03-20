@@ -1,31 +1,35 @@
 name: Deploy docs to github pages
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - main    # runs after PRs are merged
+      - main
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# idk what this does
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    #needs: build
     runs-on: ubuntu-latest
-    # ???
+
+    # Run only on merged requests
+    if: github.event.pull_request.merged == true
+
+    # this is needed!!
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     env:
+      # Enable debug logging for `gh` command
       GH_DEBUG: api
+      # Give `gh` command access to repo
       GH_TOKEN: ${{ github.token }}
+
     steps:
       - name: Deploy to GitHub Pages
         run: |
@@ -82,12 +86,15 @@ jobs:
 
           echo "Artifact ID: $artifact_id"
 
-          echo "Attempt enabling pages..."
-          gh api \
-            --method POST \
-            "/repos/$repo/pages" \
-            -f 'build_type=workflow' \
-            || echo "It failed but that's probably OK"
+          # This causes some WEIRD issues!
+          # Better to do it manually i think
+          #
+          #echo "Attempt enabling pages..."
+          #gh api \
+          #  --method POST \
+          #  "/repos/$repo/pages" \
+          #  -f 'build_type=workflow' \
+          #  || echo "It failed but that's probably OK"
 
           oidc_token="$(
             curl -sSL \
