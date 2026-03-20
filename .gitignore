@@ -215,3 +215,6 @@ log.txt
 # doxy output files that might get mixed in with input
 tutorials/*.html
 tutorials/Gui/*.html
+
+# Allow logo/banner pictures
+!logo/*.png
