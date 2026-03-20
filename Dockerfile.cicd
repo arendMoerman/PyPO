@@ -1,0 +1,41 @@
+FROM ubuntu:20.04
+
+#ARG CUDA_KEYRING_URL=https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.1-1_all.deb
+
+ARG DEBIAN_FRONTEND=noninteractive
+WORKDIR /setup
+
+RUN \
+	apt update && \
+	apt install -y \
+		python3.8 \
+		python3.8-dev \
+		python3.8-venv \
+		doxygen \
+		cmake \
+		gcc \
+		g++ \
+		pandoc \
+		`# LaTeX and a bunch of pkgs required by... ` \
+		`# the unit tests?????? HUH???? ` \
+		texlive-latex-base \
+		texlive-bibtex-extra \
+		`# type1cm.sty` \
+		texlive-latex-extra \
+		`# type1ec.sty` \
+		cm-super-minimal \
+		`# siunitx.sty` \
+		texlive-science \
+		&& \
+	:
+
+COPY ./requirements-dev.txt ./requirements-dev.txt
+RUN \
+	python3.8 -m venv /venv && \
+	. /venv/bin/activate && \
+	pip install -r requirements-dev.txt && \
+	:
+
+WORKDIR /app
+
+
