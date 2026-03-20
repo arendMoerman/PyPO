@@ -45,7 +45,11 @@ class build_ext(build_ext_orig):
                 self.spawn(['cmake', '--build', '.'])
         os.chdir(str(cwd))
 
-required = ["numpy", "scipy", "matplotlib"]
+required = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    ]
 
 extras_require = {
     "dev": [

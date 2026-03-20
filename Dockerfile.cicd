@@ -8,18 +8,30 @@ WORKDIR /setup
 RUN \
 	apt update && \
 	apt install -y \
-		python3.9 \
-		python3.9-dev \
-		python3.9-venv \
+		python3.8 \
+		python3.8-dev \
+		python3.8-venv \
 		doxygen \
 		cmake \
+		gcc \
+		g++ \
 		pandoc \
+		`# LaTeX and a bunch of pkgs required by... ` \
+		`# the unit tests?????? HUH???? ` \
+		texlive-latex-base \
+		texlive-bibtex-extra \
+		`# type1cm.sty` \
+		texlive-latex-extra \
+		`# type1ec.sty` \
+		cm-super-minimal \
+		`# siunitx.sty` \
+		texlive-science \
 		&& \
 	:
 
 COPY ./requirements-dev.txt ./requirements-dev.txt
 RUN \
-	python3.9 -m venv /venv && \
+	python3.8 -m venv /venv && \
 	. /venv/bin/activate && \
 	pip install -r requirements-dev.txt && \
 	:

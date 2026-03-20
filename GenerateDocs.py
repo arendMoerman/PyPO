@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Written with py39 in mind
+# Written with py38 in mind
 
 """!
 @file
@@ -8,6 +8,8 @@ PyPO docs generator.
 
 For this script to work properly, you should have installed the docs prerequisites.
 """
+
+from __future__ import annotations
 
 from pathlib import Path
 import shutil
