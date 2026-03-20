@@ -205,8 +205,10 @@ _testTypeHinting.py
 # Doxygen output dir
 docs
 
-# idk
+# misc
 log.txt
+foo.sh
+archive
 
 # tooling
 .ruff_cache
