@@ -354,6 +354,9 @@ and set the publishing source to workflow (not a branch).
 This is documented
 [here](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
 
+Additionally, it is likely required to disable any branch protection
+rules which restrict which brances are allowed to deploy to Pages.
+
 It is also advised to
 [enable "Require Status Checks"](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule)
 in the repository settings
