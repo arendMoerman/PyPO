@@ -232,7 +232,7 @@ void Parabola_uv(T *parabola, U xu_lo, U xu_up, U yv_lo,
             ut.ext(Qu, Qv, out);
             ut.abs(out, norm);
 
-            parabola->area[idx] = norm * duv * dv;
+            parabola->area[idx] = norm * duv * dv * M_PI/180;
 
             if (transform)
             {
@@ -420,7 +420,7 @@ void Hyperbola_uv(T *hyperbola, U xu_lo, U xu_up, U yv_lo,
             ut.ext(Qu, Qv, out);
             ut.abs(out, norm);
 
-            hyperbola->area[idx] = norm * duv * dv;
+            hyperbola->area[idx] = norm * duv * dv * M_PI/180;
 
             if (transform)
             {
@@ -608,7 +608,7 @@ void Ellipse_uv(T *ellipse, U xu_lo, U xu_up, U yv_lo,
             ut.ext(Qu, Qv, out);
             ut.abs(out, norm);
 
-            ellipse->area[idx] = norm * duv * dv;
+            ellipse->area[idx] = norm * duv * dv * M_PI/180;
             
             if (transform)
             {
@@ -759,7 +759,7 @@ void Plane_uv(T *plane, U xu_lo, U xu_up, U yv_lo,
             plane->nz[idx] = nfac * 1;
 
             // Calculate du along value of v, dv unchanged.
-            plane->area[idx] = u * duv * dv;            
+            plane->area[idx] = u * duv * dv * M_PI/180;            
             if (transform)
             {
                 transformGrids<T, U>(plane, idx, inp, out, &ut, mat);
@@ -843,6 +843,23 @@ void Plane_AoE(T *plane, U xu_lo, U xu_up, U yv_lo,
                 transformGrids<T, U>(plane, idx, inp, out, &ut, mat);
             }
         }
+    }
+}
+
+template<typename T, typename U, typename W>
+void add_surferr_uncorr(T refl, W *container)
+{
+    Random<U> normal(refl.rms_seed); 
+
+    int num = refl.n_cells[0] * refl.n_cells[1];
+    
+    U store;
+    for (int n = 0; n < num; ++n) {
+        store = normal.generateNormal(refl.rms);
+        
+        container->x[n] += store * container->nx[n];
+        container->y[n] += store * container->ny[n];
+        container->z[n] += store * container->nz[n];
     }
 }
 
@@ -947,6 +964,11 @@ void generateGrid(reflparams refl, reflcontainer *container, bool transform, boo
         Plane_AoE<reflcontainer, double>(container, xu_lo, xu_up, yv_lo,
                                         yv_up, xcenter, ycenter, ncx, ncy, refl.transf, transform, spheric);
     }
+
+    if (refl.rms > 0)
+    {
+        add_surferr_uncorr<reflparams, double, reflcontainer>(refl, container);
+    }
 }
 
 /**
@@ -1050,5 +1072,10 @@ void generateGridf(reflparamsf refl, reflcontainerf *container, bool transform, 
     {
         Plane_AoE<reflcontainerf, float>(container, xu_lo, xu_up, yv_lo,
                                         yv_up, xcenter, ycenter, ncx, ncy, refl.transf, transform, spheric);
+    }
+    
+    if (refl.rms > 0)
+    {
+        add_surferr_uncorr<reflparamsf, float, reflcontainerf>(refl, container);
     }
 }

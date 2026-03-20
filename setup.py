@@ -47,10 +47,23 @@ class build_ext(build_ext_orig):
 
 required = ["numpy", "scipy", "matplotlib"]
 
+# The package version number is set in `src/PyPO/__init__.py` only.
+# Use bump-my-version to update it and the `README.md` file.
+init_file = pathlib.Path(__file__).parent.absolute() / "src/PyPO/__init__.py"
+default_v = '0.0.0'
+version = default_v # Subtle trick here to avoid bump-my-version finding these lines
+with open(init_file, 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+        if '__version__ =' in line:
+            version = line.split('=')[-1].strip().strip("'\"")
+            break
+
+
 setup(
     name='PyPO-pkg',
     license="MIT",
-    version='1.0.0',
+    version=version,
     author="Arend Moerman",
     install_requires = required,
     package_dir = {'': 'src'},
@@ -62,7 +75,6 @@ setup(
         "Programming Language :: C",
         "Programming Language :: C++",
         "Environment :: GPU :: NVIDIA CUDA :: 11",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Physics"
     ],

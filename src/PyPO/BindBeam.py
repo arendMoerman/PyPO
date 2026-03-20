@@ -153,6 +153,7 @@ def makeGauss(gdict_py, source):
 
     return out_field, out_current
 
+
 def makeScalarGauss(gdict_py, source):
     """!
     Generate a scalar Gaussian beam.

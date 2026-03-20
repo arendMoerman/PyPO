@@ -1,0 +1,199 @@
+/** 
+
+\page install Installation
+
+The prerequisites for installing `PyPO` on any operating system are:
+- A working [Python installation of version 3.8 or higher](https://www.python.org/downloads/release/python-380/).
+- A [pip installation](https://pip.pypa.io/en/stable/installation/).
+
+All other necessary prerequisites are fetched and installed upon installing `PyPO`.
+
+\section General Prerequisites
+`PyPO` uses [CMake](https://cmake.org/) to build from source and if a source distribution is desired, it needs to be installed.
+In addition, wheel is required as well:
+```
+pip install cmake wheel
+```
+
+\section cuda Using PyPO On GPU
+The full power of `PyPO` shines through when running on the GPU.   However, if you do not have a CUDA compatible GPU, you can safely skip the CUDA
+related instructions below, and use the C++ CPU library only.
+
+In order to use the GPU accelerated libraries for `PyPO`, a working CUDA installation should be present.
+For Linux, [this article](https://linuxconfig.org/how-to-install-cuda-on-ubuntu-20-04-focal-fossa-linux) describes nicely how to install CUDA through the apt repository.
+
+For Windows, see the [official instructions](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html) on the Nvidia website.
+
+Unfortunately, [Apple has stopped supporting Nvidia cards since 2015](https://appleinsider.com/articles/19/01/18/apples-management-doesnt-want-nvidia-support-in-macos-and-thats-a-bad-sign-for-the-mac-pro) and therefore, the CUDA libraries for `PyPO` cannot be installed on MacOS currently.
+
+After installing CUDA, `PyPO` will detect this and, upon building, will build the CUDA libraries.
+It is therefore important to re-install `PyPO` if you installed it before installing CUDA, otherwise the libraries will not be built.
+
+\section linux Linux Installation
+
+\subsection miniforge-conda Optional, but highly recommended: Install Miniconda
+
+It's good practice to carry out Python development and installations in self contained `conda` or `venv` environments.
+This isolates your system Python environment from the Python environment used to run this software, and prevents OS breaking bugs.
+
+We prefer the open [conda-forge](https://conda-forge.org/) Conda ecosystem.
+
+```
+~/$ wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+~/$ chmod u+x Miniforge3-Linux-x86_64.sh
+~/$ ./Miniforge3-Linux-x86_64.sh
+```
+
+Run through the installer. The default options should not need to be changed unless you have specific requirements.
+
+After installation, activate the base environment.
+```
+~/$ source ~/.bashrc
+```
+
+We want to leave the `base` Conda environment as empty as possible to avoid any risk of breaking Conda, so we create a minimal `pypo`
+Conda environment, and then activate it:
+```
+~/$ conda create -n pypo python pip ipykernel
+~/$ conda activate pypo
+```
+note: the ipykernel packge is installed to allow Jupyter Lab or VSCode to access the pypo Python kernel to run Jupyter notebooks.  
+You could omit it if not using Jupyter notebooks.
+
+We now have a fresh Conda environment ready to begin installation of `PyPO`.
+
+\subsection ubuntu-prerequisites Ubuntu Linux Prerequisites
+
+To build and install `PyPO`, we need a working software build system, as well as Git to checkout the repo. 
+The CUDA backend additionally requires a recent CUDA driver (native Linux only) and CUDA toolkit (both native and WSL Linux).
+
+The essential build tools can be installed with:
+```
+sudo apt-get update
+sudo apt-get install build-essential git
+```
+
+For native Linux OSes only (not WSL), we next install the [CUDA toolkit and drivers](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=24.04&target_type=deb_network):
+```
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
+sudo apt-get -y install cuda-toolkit-13-1
+```
+
+Followed by one of (depending on your preferences for CUDA flavor):
+
+```
+sudo apt-get install -y nvidia-open
+```
+or 
+```
+sudo apt-get install -y cuda-drivers
+```
+
+For Linux running under WSL, the CUDA toolkit can be installed using instructions from 
+[CUDA Toolkit 13.1 Update 1 Downloads page](https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_network). 
+The toolkit version installed should match the major and minor version numbers for the CUDA toolkit installed on the host Windows OS. Do not install CUDA drivers.
+
+```
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt-get update
+sudo apt-get -y install cuda-toolkit-13-1
+```
+
+After installation, you will need to add the CUDA toolkit path `/usr/local/cuda/bin` to your `$PATH` variable, and
+the CUDA library path `/usr/local/cuda/lib64` to your `$LD_LIBRARY_PATH` variable. This is best done in your `.bashrc` file.
+
+\subsection pypo-install-linux PyPO installation on Linux
+
+To install `PyPO` from source on Linux, clone the git repository:
+```
+git clone https://github.com/PyPO-dev/PyPO
+```
+Alternatively, download the .zip package from [here](https://github.com/PyPO-dev/PyPO) and unpack in the preferred destination.
+Navigate to the cloned/unpacked repository and run:
+```
+pip install .
+```
+
+\section macos MacOS
+You will need to have the command line tools package installed:
+```
+xcode-select --install
+```
+
+Then, installation of `PyPO` proceeds in the same fashion as for \ref linux "Linux".
+
+\section windows_wsl Windows with WSL
+The easiest way to get `PyPO` working on Windows is to use Windows Subsystem for Linux 2 to install an Ubuntu virtual machine.
+WSL-2 allows for direct access to NVidia GPUs for CUDA calculations.
+
+\subsection wsl-cuda Prepare Windows CUDA Toolkit and Drivers
+
+Install CUDA drivers and toolkit for Windows, using the [official instructions](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html) 
+on the Nvidia website. Make a note of the version of the CUDA Toolkit that is installed, as we will have to match the version installed
+in the Linux virtual machine with the version installed on Windows.
+
+\subsection wsl-ubuntu Install Windows Subsystem for Linux and the Ubuntu Linux OS
+
+See the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/install) for installing Ubuntu Linux under WSL.
+
+Set up your new Linux virtual machine as desired.
+
+The rest of the `PyPO` installation proceeds as for the \ref linux "Linux" instructions above.
+
+\subsection wsl-vscode Using VSCode to access the Ubuntu WSL VM
+
+The most convenient way to run Python code within WSL from the Windows desktop is via Visual Studio Code.
+
+Once VS Code is installed on your Windows OS, it can be installed within the Ubuntu VM by running `code` on the Linux
+terminal.  This will open a native Windows VSCode window with direct access to your Ubuntu VM.
+
+```
+$ code 
+```
+
+You can then open specific directories from within the Linux terminal with:
+```
+~/pypo/$ code .
+~/ code pypo/tutorials
+```
+etc.
+
+
+\section windows Native Windows 
+Install [Visual Studio Express](https://visualstudio.microsoft.com/vs/express/).
+Choose the C++ desktop development package.
+Important is, is that the MSVC compiler is present
+
+After this is installed, `PyPO` can be installed just like on \ref linux "Linux".
+
+\section devinstall Dev Install
+In order to develop `PyPO`, we recommend to install `PyPO` in edit mode. See \ref devinstall_page "this section" of the developers guidelines page for more info.
+
+\section optdep Optional Dependencies
+`PyPO` contains several optional features such as a graphical user interface (GUI).
+For developers, an automated testing framework is present as well as a documentation generator.
+The prerequisites for these features are not installed through the regular install. 
+Instead, they can be installed separately as needed.
+
+To use the GUI, PySide6, pyqtdarktheme and attrs need to be installed:
+```
+pip install PySide6 pyqtdarktheme attrs
+```
+
+The automated tests are run using the nose2 framework:
+```
+pip install nose2
+```
+
+For running the interactive notebooks for the tutorials and demos, Jupyter notebook needs to be installed:
+```
+pip install notebook
+```
+
+Documentation in `PyPO` is generated using [Doxygen](https://www.doxygen.nl/index.html).
+Please see their [installation page](https://www.doxygen.nl/manual/install.html) for instructions regarding installation.
+
+*/

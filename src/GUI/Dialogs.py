@@ -7,7 +7,6 @@ from typing import Optional
 from PySide6.QtWidgets import QDialog, QGridLayout, QPushButton, QLabel
 from PySide6.QtCore import Qt, Signal
 
-DialogPointer = None
 class SymDialog(QDialog):
     """!
     Dialog to be shown during long calculations. 
@@ -62,12 +61,7 @@ class selfClosingDialog(QDialog):
     """
     def __init__(self, closeFunc, parent=None):
         super().__init__(parent)
-        global DialogPointer
-        if DialogPointer != None:
-            DialogPointer.closeFunc()
-    
         self.closeFunc = closeFunc
-        DialogPointer = self
 
     def leaveEvent(self, event):
         self.closeFunc()

@@ -1,16 +1,20 @@
 var searchData=
 [
-  ['scalarfield_0',['scalarfield',['../classPyPO_1_1PyPOTypes_1_1scalarfield.html',1,'PyPO::PyPOTypes']]],
-  ['scalarfieldnameerror_1',['ScalarFieldNameError',['../classPyPO_1_1Checks_1_1ScalarFieldNameError.html',1,'PyPO::Checks']]],
-  ['scalargpodict_2',['ScalarGPODict',['../classPyPO_1_1Structs_1_1ScalarGPODict.html',1,'PyPO.Structs.ScalarGPODict'],['../structScalarGPODict.html',1,'ScalarGPODict']]],
-  ['scalargpodictf_3',['ScalarGPODictf',['../classPyPO_1_1Structs_1_1ScalarGPODictf.html',1,'PyPO.Structs.ScalarGPODictf'],['../structScalarGPODictf.html',1,'ScalarGPODictf']]],
-  ['selectionwidgetinterface_4',['selectionWidgetInterface',['../classGUI_1_1ParameterForms_1_1inputWidgetInterfaces_1_1selectionWidgetInterface.html',1,'GUI::ParameterForms::inputWidgetInterfaces']]],
-  ['selfclosingdialog_5',['selfClosingDialog',['../classGUI_1_1Dialogs_1_1selfClosingDialog.html',1,'GUI::Dialogs']]],
-  ['sfieldswidget_6',['SFieldsWidget',['../classGUI_1_1ElementWidget_1_1SFieldsWidget.html',1,'GUI::ElementWidget']]],
-  ['simpledropdown_7',['SimpleDropdown',['../classGUI_1_1ParameterForms_1_1simpleInputWidgets_1_1SimpleDropdown.html',1,'GUI::ParameterForms::simpleInputWidgets']]],
-  ['simpleradio_8',['SimpleRadio',['../classGUI_1_1ParameterForms_1_1simpleInputWidgets_1_1SimpleRadio.html',1,'GUI::ParameterForms::simpleInputWidgets']]],
-  ['staticinput_9',['StaticInput',['../classGUI_1_1ParameterForms_1_1simpleInputWidgets_1_1StaticInput.html',1,'GUI::ParameterForms::simpleInputWidgets']]],
-  ['subprocessmanager_10',['SubprocessManager',['../classGUI_1_1SubprocessManager_1_1SubprocessManager.html',1,'GUI::SubprocessManager']]],
-  ['symdialog_11',['SymDialog',['../classGUI_1_1Dialogs_1_1SymDialog.html',1,'GUI::Dialogs']]],
-  ['system_12',['System',['../classPyPO_1_1System_1_1System.html',1,'PyPO::System']]]
+  ['radiosubwidget_779',['RadioSubWidget',['../classGUI_1_1ParameterForms_1_1simpleInputWidgets_1_1XYZRadio_1_1RadioSubWidget.html',1,'GUI::ParameterForms::simpleInputWidgets::XYZRadio']]],
+  ['random_780',['Random',['../classRandom.html',1,'']]],
+  ['raytracer_781',['RayTracer',['../classRayTracer.html',1,'']]],
+  ['reflcontainer_782',['reflcontainer',['../classPyPO_1_1Structs_1_1reflcontainer.html',1,'PyPO.Structs.reflcontainer'],['../structreflcontainer.html',1,'reflcontainer']]],
+  ['reflcontainerf_783',['reflcontainerf',['../classPyPO_1_1Structs_1_1reflcontainerf.html',1,'PyPO.Structs.reflcontainerf'],['../structreflcontainerf.html',1,'reflcontainerf']]],
+  ['reflectorwidget_784',['ReflectorWidget',['../classGUI_1_1ElementWidget_1_1ReflectorWidget.html',1,'GUI::ElementWidget']]],
+  ['reflgrids_785',['reflGrids',['../classPyPO_1_1PyPOTypes_1_1reflGrids.html',1,'PyPO::PyPOTypes']]],
+  ['reflparams_786',['reflparams',['../classPyPO_1_1Structs_1_1reflparams.html',1,'PyPO.Structs.reflparams'],['../structreflparams.html',1,'reflparams']]],
+  ['reflparamsf_787',['reflparamsf',['../classPyPO_1_1Structs_1_1reflparamsf.html',1,'PyPO.Structs.reflparamsf'],['../structreflparamsf.html',1,'reflparamsf']]],
+  ['removeelementdialog_788',['RemoveElementDialog',['../classGUI_1_1Dialogs_1_1RemoveElementDialog.html',1,'GUI::Dialogs']]],
+  ['rescontainer_789',['resContainer',['../classPyPO_1_1PyPOTypes_1_1resContainer.html',1,'PyPO::PyPOTypes']]],
+  ['rfield_790',['rfield',['../classPyPO_1_1PyPOTypes_1_1rfield.html',1,'PyPO::PyPOTypes']]],
+  ['rtdict_791',['RTDict',['../classPyPO_1_1Structs_1_1RTDict.html',1,'PyPO.Structs.RTDict'],['../structRTDict.html',1,'RTDict']]],
+  ['rtdictf_792',['RTDictf',['../classPyPO_1_1Structs_1_1RTDictf.html',1,'PyPO.Structs.RTDictf'],['../structRTDictf.html',1,'RTDictf']]],
+  ['rtrefls_793',['RTRefls',['../classRTRefls.html',1,'']]],
+  ['runpoerror_794',['RunPOError',['../classPyPO_1_1Checks_1_1RunPOError.html',1,'PyPO::Checks']]],
+  ['runrterror_795',['RunRTError',['../classPyPO_1_1Checks_1_1RunRTError.html',1,'PyPO::Checks']]]
 ];

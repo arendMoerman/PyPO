@@ -71,6 +71,7 @@ void makeGauss(GPODict gdict, reflparams plane, c2Bundle *res_field, c2Bundle *r
     initGauss<GPODict, reflparams, c2Bundle, reflcontainer, double>(gdict, plane, res_field ,res_current);
 }
 
+
 /** 
  * Initialize Gaussian beam from GPODict or GPODictf.
  *

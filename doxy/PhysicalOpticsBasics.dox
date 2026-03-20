@@ -1,0 +1,140 @@
+/**
+\page pobasics Introduction To Physical Optics
+\section pobasics_intro Introduction
+
+The Physical Optics method is a high frequency technique for calculating the \f$\mathbf{E}\f$ and \f$\mathbf{H}\f$ fields scattered
+by objects.
+
+The general scattering problem consists of a known incident field incident on a scatterer of some known geometry and material
+properties. The output is the total radiated fields, which can be divided into the incident fields \f$\mathbf{E}_{inc}\f$ and 
+\f$\mathbf{H}_{inc}\f$ and the scattered fields \f$\mathbf{E}_{scat}\f$ and \f$\mathbf{H}_{scat}\f$.
+
+$$ \mathbf{E} = \mathbf{E}_{inc} + \mathbf{E}_{scat} $$
+$$ \mathbf{H} = \mathbf{H}_{inc} + \mathbf{H}_{scat} $$
+
+For a thin scattering surface, the scattered fields can be further divided into reflected and transmitted fields:
+
+$$ \mathbf{E}_{scat} = \mathbf{E}_{ref} + \mathbf{E}_{trans} $$
+$$ \mathbf{H}_{scat} = \mathbf{H}_{ref} + \mathbf{H}_{trans} $$
+
+The scattered fields can be taken as entirely due to electric and magnetic currents, 
+\f$\mathbf{J}\f$ and \f$\mathbf{M}\f$, induced on the surface(s) of the scatterer by the incident fields.
+
+\section pobasics_approx The Physical Optics Approximation
+
+The Physical Optics approximation consists of assuming that the surface electric and magnetic currents at a specific point
+on a curved scatterer are the same as those on an infinite plane tangent to scattering surface at that point. Each of the
+incident, reflected and transmitted fields contribute to the surface currents.
+
+On a perfectly electrially conducting (PEC) plane surface, the transmitted fields vanish. The reflected \f$\mathbf{E}_{ref}\f$ 
+field at the scattering surface is equal to the incident field, but with opposite phase, while the reflected \f$\mathbf{H}_{ref}\f$
+field has the same phase as the incident field.
+
+Thus for a perfectly conducting scatterering plane, these currents are given by:
+
+$$ \mathbf{J} = \mathbf{\hat{n}} \times (\mathbf{H}_{inc} + \mathbf{H}_{ref}) = 2 \mathbf{\hat{n}} \times \mathbf{H}_{inc} $$
+$$ \mathbf{M} = - \mathbf{\hat{n}} \times (\mathbf{E}_{inc} + \mathbf{E}_{ref}) = 0 $$
+
+The currents across the surface of a curved scatterer are thus calculated by dividing the scatterer into planar facets that are tangent
+to the surface at their center, and calculating the currents at the center of each facet as if it were an infinite plane.
+
+These currents are only present in the region of the scatterer directly illuminated by the source of the incident radiation
+field. An additional approximation within the Physical Optics method for PEC scatterers is that the currents on portions of the scatterer 
+that are shadowed from the source (under geometric ray optics) are exactly zero.
+
+\section pobasics_fieldcalc Calculation of fields at a point
+
+Once the electric and magnetic currents induced at each point across the scatterer have been calculated, it is then necessary to
+calculated the field due to those currents at some distant point \f$\mathbf{r}\f$.  This is carried out using source representation of the field
+that is a solution to the Helmholtz equation for monochromatic fields in isotropic media due to a source Hertzian dipole, and
+integrating over the current distribution induced on the scatterer surface.
+
+For the electric component of the field, this is given by:
+
+$$ \mathbf{E}(\mathbf{r}) = - k Z_m \int_{S} \Big( 1 + \frac{1}{k^2}\mathbf{\nabla}\mathbf{\nabla} \Big) G(\mathbf{r}, \mathbf{r_s}) \cdot \mathbf{J}(\mathbf{r_s}) d s_q + \int_{S} \mathbf{M}(\mathbf{r_s}) \times \mathbf{\nabla} G(\mathbf{r}, \mathbf{r_q}) d s $$
+
+And for the magnetic component
+
+$$ \mathbf{H}(\mathbf{r}) = - k Z_m \int_{S} \Big( 1 + \frac{1}{k^2}\mathbf{\nabla}\mathbf{\nabla} \Big) G(\mathbf{r}, \mathbf{r_s}) \cdot \mathbf{M}(\mathbf{r_s}) d s_q + \int_{S} \mathbf{J}(\mathbf{r_s}) \times \mathbf{\nabla} G(\mathbf{r}, \mathbf{r_q}) d s $$
+
+where:
+
+\f$\mathbf{r}_s\f$ is a point on the source scatterer.
+
+\f$S\f$ is the source scatterer to be integrated over.
+
+\f$d s_q\f$ is an area element of the source scatterer surface centered at \f$\mathbf{r}_s\f$
+
+\f$k = \frac{2 \pi c}{n \lambda}\f$ is the wave number.
+
+\f$Z_m = \sqrt{\frac{\mu_r \mu_0}{\epsilon_r \epsilon_0}}\f$ is the impedance of the background media
+
+\f$G = \frac{e^{-i k R}}{4 \pi R}\f$ is the freespace Green's function
+
+\f$\mathbf{R} = \mathbf{r_s} - \mathbf{r}\f$ is the vector from the target point to the source point
+
+\f$R = |\mathbf{R}| = |\mathbf{r_s} - \mathbf{r}|\f$ is the distance between the observation point and the point on the source scatterer.
+
+\f$\mathbf{\hat{R}} \f$ is the unit vector in the direction of 
+
+Which yields:
+
+$$ \mathbf{E} = \frac{k^2}{4\pi} \int_S Z \Bigg[J \Bigg( \frac{-i}{kR} - \frac{1}{(kR)^2} + \frac{i}{(kR)^3}\Bigg) + (\mathbf{J}\cdot\mathbf{\hat{R}})\mathbf{\hat{R}}\Bigg( \frac{i}{kR} + \frac{3}{(kR)^2} - \frac{3i}{(kR)^3} \Bigg)\Bigg] - \mathrm{M}\times\mathrm{\hat{R}}\Bigg(\frac{i}{kR}+\frac{1}{(kR)^2}\Bigg) e^{-ikR} ds $$
+
+$$ \mathbf{H} = \frac{k^2}{4\pi} \int_S \frac{1}{Z} \Bigg[M \Bigg( \frac{-i}{kR} - \frac{1}{(kR)^2} + \frac{j}{(kR)^3}\Bigg) + (\mathbf{M}\cdot\mathbf{\hat{R}})\mathbf{\hat{R}}\Bigg( \frac{i}{kR} + \frac{3}{(kR)^2} - \frac{3i}{(kR)^3} \Bigg)\Bigg]  + \mathrm{J}\times\mathrm{\hat{R}}\Bigg(\frac{i}{kR}+\frac{1}{(kR)^2}\Bigg) e^{-ikR} ds $$
+
+For backwards propagation, we change the Green's functon to \f$G_{r} = \frac{e^{i k R}}{4 \pi R}\f$, yielding:
+
+$$ \mathbf{E} = \frac{k^2}{4\pi} \int_S Z \Bigg[J \Bigg( \frac{-i}{kR} + \frac{1}{(kR)^2} + \frac{j}{(kR)^3}\Bigg) + (\mathbf{J}\cdot\mathbf{\hat{R}})\mathbf{\hat{R}}\Bigg( \frac{i}{kR} - \frac{3}{(kR)^2} - \frac{3i}{(kR)^3} \Bigg)\Bigg] + \mathrm{M}\times\mathrm{\hat{R}}\Bigg(\frac{i}{kR}+\frac{1}{(kR)^2}\Bigg) e^{ikR} ds$$
+
+$$ \mathbf{H} = \frac{k^2}{4\pi} \int_S \frac{1}{Z} \Bigg[M \Bigg( \frac{-i}{kR} + \frac{1}{(kR)^2} + \frac{j}{(kR)^3}\Bigg) + (\mathbf{M}\cdot\mathbf{\hat{R}})\mathbf{\hat{R}}\Bigg( \frac{i}{kR} - \frac{3}{(kR)^2} - \frac{3i}{(kR)^3} \Bigg)\Bigg] - \mathrm{J}\times\mathrm{\hat{R}}\Bigg(\frac{i}{kR}+\frac{1}{(kR)^2}\Bigg) e^{ikR} ds $$
+
+\subsection pobasics_farfields Far fields
+
+The far field is defined by the limit
+$$\mathbf{E}_{far} = \lim_{r\rightarrow\infty} \mathbf{E}(\mathbf{r}) k r e^{ikr}$$
+
+$$\mathbf{H}_{far} = \lim_{r\rightarrow\infty} \mathbf{H}(\mathbf{r}) k r e^{ikr}$$
+
+where \f$r\f$ = \f$|\mathbf{r}|\f$.
+
+Inserting the above equations for forward propagation gives:
+
+$$ \mathbf{E}_{far} = -\frac{ik^2}{4\pi} \int_S \Bigg(Z \Big(\mathbf{J} - (\mathbf{J}\cdot\mathbf{\hat{r}})\mathbf{\hat{r}}\Big) - \mathbf{\hat{r}} \times \mathbf{M} \Bigg) e^{ik\mathbf{r}_s\cdot\mathbf{\hat{r}}} ds $$
+
+
+$$ \mathbf{H}_{far} = -\frac{ik^2}{4\pi} \int_S \Bigg(\frac{1}{Z} \Big(\mathbf{M} - (\mathbf{M}\cdot\mathbf{\hat{r}})\mathbf{\hat{r}}\Big) + \mathbf{\hat{r}} \times \mathbf{J} \Bigg) e^{ik\mathbf{r}_s\cdot\mathbf{\hat{r}}} ds $$
+
+For backward propagation, the farfield is given by:
+
+$$ \mathbf{E}_{far} = -\frac{ik^2}{4\pi} \int_S \Bigg(Z \Big(\mathbf{J} - (\mathbf{J}\cdot\mathbf{\hat{r}})\mathbf{\hat{r}}\Big) + \mathbf{\hat{r}} \times \mathbf{M} \Bigg) e^{-ik\mathbf{r}_s\cdot\mathbf{\hat{r}}} ds $$
+
+
+$$ \mathbf{H}_{far} = -\frac{ik^2}{4\pi} \int_S \Bigg(\frac{1}{Z} \Big(\mathbf{M} - (\mathbf{M}\cdot\mathbf{\hat{r}})\mathbf{\hat{r}}\Big) - \mathbf{\hat{r}} \times \mathbf{J} \Bigg) e^{-ik\mathbf{r}_s\cdot\mathbf{\hat{r}}} ds $$
+
+\section pobasics_process The PO Simulation Process
+
+Physical optics simulations of a system of scatterings proceeds by:
+1. A source of electrical and magnetic currents is defined¸ either directly, or from a specified \f$\mathbf{E}\f$ and \f$\mathbf{H}\f$
+field using a specified boundary condition (PEC is the default choice).
+2. The fields and currents on the first scatterer due to the source are calculated.  First \f$\mathbf{E}_{inc}\f$ and \f$\mathbf{H}_{inc}\f$ 
+fields due to the source are calculated at each grid point on the target scatterer. From these fields, the electric and magnetic currents,
+\f$\mathbf{J}\f$ and \f$\mathbf{M}\f$, induced on the scatterer are determined.
+3. The fields and currents on the second scatterer due to the currents on the first scatterer are calculated. This process is repeated for each scatterer in the system.
+4. The output fields are calculated from the currents induced on the final scatterer.
+
+In general, the fields on each scattering and output plane can be calculated due to multiple sources by simply adding the fields from each individual source.
+
+\section pobasics_materialproperties Material Properties
+
+For a scatterer other than a perfect electrical conductor, the reflected \f$\mathbf{H}_{ref}\f$ field at the surface is no longer equal 
+to the incident \f$\mathbf{H}_{inc}\f$ field, and the reflected \f$\mathbf{E}_{ref}\f$ field no longer exactly cancels the incident 
+\f$\mathbf{E}_{inc}\f$ field. The transmitted fields are also no longer generally zero.
+
+The reflection and transmission coefficients in general vary with angle, and also differ for incident plane waves that are polarized
+perpendicular and parallel to the plane defined by the incident and reflected rays.
+
+\section pobasics_limitations Limitations of the PO approximation
+
+
+*/

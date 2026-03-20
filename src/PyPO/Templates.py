@@ -128,7 +128,7 @@ runPODict = {
         "t_name"        : "Name of target surface (string)",
         "s_current"     : "Name of current object in system.currents (string)",
         "s_scalarfield" : "Scalar complex field for scalar propagation only (Numpy array)",
-        "epsilon"       : "Relative permittivity of source surface (real)",
+        "epsilon"       : "Relative permittivity of background media (real)",
         "exp"           : "Divergent or convergent beam (string)",
         "nThreads"      : "Number of CPU/GPU threads (int)",
         "device"        : "Device to use for calculation",
