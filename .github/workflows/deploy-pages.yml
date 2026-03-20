@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         run: |
-          repo=maybeetree/PyPO-fork
+          repo=PyPO-dev/PyPO
 
           # echo to stderr
           eecho() {
