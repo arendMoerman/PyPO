@@ -5,6 +5,8 @@ System interface for PyPO.
 This script contains the System class definition.
 """
 
+from __future__ import annotations
+
 # Standard Python imports
 from scipy.optimize import fmin
 from scipy.interpolate import interp1d, griddata
@@ -17,7 +19,7 @@ import copy
 import logging
 from pathlib import Path
 import pickle 
-from typing import Self, Union
+from typing import Union
 
 # PyPO-specific modules
 import PyPO.BindRefl as BRefl

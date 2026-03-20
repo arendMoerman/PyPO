@@ -45,7 +45,20 @@ class build_ext(build_ext_orig):
                 self.spawn(['cmake', '--build', '.'])
         os.chdir(str(cwd))
 
-required = ["numpy", "scipy", "matplotlib"]
+required = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    ]
+
+extras_require = {
+    "dev": [
+        "nose2",
+        "coverage",
+        "pip-tools",
+        "jupyter",
+        ],
+}
 
 # The package version number is set in `src/PyPO/__init__.py` only.
 # Use bump-my-version to update it and the `README.md` file.
@@ -65,7 +78,8 @@ setup(
     license="MIT",
     version=version,
     author="Arend Moerman",
-    install_requires = required,
+    install_requires=required,
+    extras_require=extras_require,
     package_dir = {'': 'src'},
     packages=['PyPO'],
     ext_modules=[CMakeExtension(os.path.join("PyPO", "libs"))],
