@@ -1,9 +1,17 @@
 name: Deploy docs to github pages
 
+# This is more reasonable but will break
+# arcanely if the pull request comes from a fork
+
+#on:
+#  pull_request:
+#    types:
+#      - closed
+#    branches:
+#      - main
+
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
 
@@ -16,8 +24,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    # Run only on merged requests
-    if: github.event.pull_request.merged == true
+    # Again, making it run only on merged PRs is
+    # more sane,
+    # but it will break in unfathomable ways if the
+    # PR comes from a fork.
+    #if: github.event.pull_request.merged == true
 
     # this is needed!!
     environment:
@@ -29,12 +40,21 @@ jobs:
       GH_DEBUG: api
       # Give `gh` command access to repo
       GH_TOKEN: ${{ github.token }}
+      # These should be defined automatically,
+      # but just to make sure.
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_SHA: ${{ github.sha }}
+
+    # These shouldn't be inherrited from global scope,
+    # but sometimes they are.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
     steps:
       - name: Deploy to GitHub Pages
         run: |
-          repo=PyPO-dev/PyPO
-
           # echo to stderr
           eecho() {
                   echo "$@" >&2
@@ -46,11 +66,29 @@ jobs:
                   exit 1
           }
 
+          test "$GITHUB_REPOSITORY" || \
+            die 'GITHUB_REPOSITORY missing!'
           test "$GITHUB_SHA" || die 'GITHUB_SHA missing!'
           test "$GH_TOKEN" || die 'GH_TOKEN missing!'
+          test "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" || \
+            die 'ACTIONS_ID_TOKEN_REQUEST_TOKEN missing!!'
+          test "$ACTIONS_ID_TOKEN_REQUEST_URL" || \
+            die 'ACTIONS_ID_TOKEN_REQUEST_URL missing!!'
+
+          repo="$GITHUB_REPOSITORY"
+
+          echo "repo: $repo"
+
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN length: "
+          echo -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" | wc -c
+
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL: "
+          echo "$ACTIONS_ID_TOKEN_REQUEST_URL"
 
           #gh api "repos/$repo/actions/runs" > \
           #	archive/gh-api-sample-repos-actions-runs.json
+          #
+
 
           run_id="$(gh api "repos/$repo/actions/runs" --jq \ '
                   .workflow_runs |
