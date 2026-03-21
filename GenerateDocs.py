@@ -16,11 +16,30 @@ import shutil
 import subprocess
 import argparse
 
+from os import environ
+
 # Paths/names of command-line tools
 DOXYGEN = "doxygen"
 JUPYTER = "jupyter"
 PANDOC = "pandoc"
 #BIBTEX = "bibtex"  # not called directly by this script; called by doxygen
+
+if environ.get('PYPO_DOCS_JUPY_CLI'):
+    print('Using nbconvert via CLI')
+    ipynb_exporter = None
+else:
+    print('Using nbconvert via python interface')
+    try:
+        from nbconvert import HTMLExporter
+        ipynb_exporter = HTMLExporter()  # type: ignore
+        ipynb_exporter.template_name = "lab"
+        ipynb_exporter.theme = "dark"
+    except ImportError as e:
+        raise ImportError(
+            "Failed to import nbconvert/nbformat python module -- install it, "
+            "or set `PYPO_DOCS_JUPY_CLI=1` to attempt using `jupyter` "
+            "cli command instead."
+            ) from e
 
 def check_dep(dep: str) -> None:
     try:
@@ -65,14 +84,16 @@ def generate_docs() -> None:
         shutil.rmtree(doc_path)
 
     if args.tutorials:
-        check_dep(JUPYTER)
+        if ipynb_exporter is None:
+            check_dep(JUPYTER)
         convert_ipynb(
             base_path / 'tutorials',
             doc_path / 'tutorials',
             )
        
     if args.demos:
-        check_dep(JUPYTER)
+        if ipynb_exporter is None:
+            check_dep(JUPYTER)
         convert_ipynb(
             base_path / 'demos',
             doc_path / 'demos',
@@ -142,18 +163,31 @@ def run_doxy(doxyfile_path: Path) -> None:
         )
 
 def run_jupyter(source: Path) -> Path:
-    run_cmd(
-        JUPYTER,
-        "nbconvert",
-        "--to",
-        "html",
-        "--template",
-        "lab",
-        "--theme",
-        "dark",
-        str(assert_is_file(source)),
-    )
-    return assert_is_file(source.with_suffix('.html'))
+
+    assert_is_file(source)
+    dest = source.with_suffix('.html')
+
+    if ipynb_exporter is None:
+        print('nbconvert via cli...')
+
+        run_cmd(
+            JUPYTER,
+            "nbconvert",
+            "--to",
+            "html",
+            "--template",
+            "lab",
+            "--theme",
+            "dark",
+            str(source),
+        )
+    
+    else:
+        print('nbconvert via python interface...')
+        body, _resources = ipynb_exporter.from_filename(str(source))
+        dest.write_text(body)
+
+    return assert_is_file(dest)
 
 def run_pandoc(source: Path, dest: Path) -> None:
     run_cmd(
