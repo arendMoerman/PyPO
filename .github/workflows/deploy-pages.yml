@@ -1,9 +1,17 @@
 name: Deploy docs to github pages
 
+# This is more reasonable but will break
+# arcanely if the pull request comes from a fork
+
+#on:
+#  pull_request:
+#    types:
+#      - closed
+#    branches:
+#      - main
+
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
 
@@ -16,8 +24,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    # Run only on merged requests
-    if: github.event.pull_request.merged == true
+    # Again, making it run only on merged PRs is
+    # more sane,
+    # but it will break in unfathomable ways if the
+    # PR comes from a fork.
+    #if: github.event.pull_request.merged == true
 
     # this is needed!!
     environment:
