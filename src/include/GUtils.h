@@ -43,7 +43,7 @@ __device__ __inline__ void dot(cuFloatComplex (&cv1)[3], cuFloatComplex (&cv2)[3
 
     for(int n=0; n<3; n++)
     {
-        out = cuCaddf(cuCmulf(cuConjf(cv1[n]), cv2[n]), out);
+        out = cuCaddf(cuCmulf(cv1[n], cv2[n]), out);
     }
 }
 
@@ -62,7 +62,7 @@ __device__ __inline__ void dot(cuFloatComplex (&cv1)[3], float (&v2)[3], cuFloat
 
     for(int n=0; n<3; n++)
     {
-        out = cuCaddf(cuCmulf(cuConjf(cv1[n]), make_cuFloatComplex(v2[n], 0)), out);
+        out = cuCaddf(cuCmulf(cv1[n], make_cuFloatComplex(v2[n], 0)), out);
     }
 }
 

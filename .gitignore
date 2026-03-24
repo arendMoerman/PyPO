@@ -199,3 +199,24 @@ src/GUI/Tests
 src/build/*
 src/bin/*
 _testTypeHinting.py
+
+### Project-specific ###
+
+# Doxygen output dir
+docs
+
+# misc
+log.txt
+foo.sh
+archive
+
+# tooling
+.ruff_cache
+.mypy_cache
+
+# doxy output files that might get mixed in with input
+tutorials/*.html
+tutorials/Gui/*.html
+
+# Allow logo/banner pictures
+!logo/*.png

@@ -1,3 +1,5 @@
+![PyPO logo](logo/pypo-logo.png)
+
 [![DOI](https://zenodo.org/badge/490758642.svg)](https://zenodo.org/badge/latestdoi/490758642)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.05478/status.svg)](https://doi.org/10.21105/joss.05478)
 
