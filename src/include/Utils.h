@@ -113,7 +113,7 @@ void Utils<T>::dot(const std::array<std::complex<T>, 3> &cv1, const std::array<s
 
     for(int n=0; n<3; n++)
     {
-        out += std::conj(cv1[n]) * cv2[n];
+        out += cv1[n] * cv2[n];
     }
 }
 
@@ -133,7 +133,7 @@ void Utils<T>::dot(const std::array<std::complex<T>, 3> &cv1, const std::array<T
 
     for(int n=0; n<3; n++)
     {
-        out += std::conj(cv1[n]) * v2[n];
+        out += cv1[n] * v2[n];
     }
 }
 
