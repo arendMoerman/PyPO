@@ -3,6 +3,8 @@
 Definitions of PyPO data structures.
 """ 
 
+import numpy as np
+
 class resContainer(object):
     """!
     Base class for EH fields and JM currents.
@@ -109,6 +111,27 @@ class currents(resContainer):
         """
 
         super().__init__(Jx, Jy, Jz, Mx, My, Mz, restype="JM")
+        
+    def save(self, filename):
+        """!
+        Save a currents object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_currents(filename):
+    """!
+    Create a currents object from a numpy arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    curr = currents(load['Jx'], load['Jy'], load['Jz'], \
+                    load['Mx'], load['My'], load['Mz'])
+    
+    curr.setMeta(str(load['surf']), float(load['k']))
+    
+    return curr
 
 class fields(resContainer):
     """!
@@ -130,6 +153,27 @@ class fields(resContainer):
         """
 
         super().__init__(Ex, Ey, Ez, Hx, Hy, Hz, restype="EH")
+        
+    def save(self, filename):
+        """!
+        Save a field object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_fields(filename):
+    """!
+    Create a field object from a numpy compressed arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    field = fields(load['Ex'], load['Ey'], load['Ez'], \
+                    load['Hx'], load['Hy'], load['Hz'])
+    
+    field.setMeta(str(load['surf']), float(load['k']))
+    
+    return field
 
 class rfield(object):
     """!
@@ -150,6 +194,24 @@ class rfield(object):
         self.x = Prx
         self.y = Pry
         self.z = Prz
+        
+    def save(self, filename):
+        """!
+        Save a rfield object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_rfield(filename):
+    """!
+    Create a rfield object from a numpy arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    field = rfield(load['x'], load['y'], load['z'])
+    
+    return field
 
 class scalarfield(object):
     """!
@@ -177,6 +239,26 @@ class scalarfield(object):
 
         self.surf = surf 
         self.k = k
+        
+    def save(self, filename):
+        """!
+        Save a scalarfield object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_scalarfield(filename):
+    """!
+    Create a scalarfield object from a numpy arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    field = scalarfield(load['S'])
+    
+    field.setMeta(str(load['surf']), float(load['k']))
+    
+    return field
 
 class reflGrids(object):
     """!
@@ -207,6 +289,23 @@ class reflGrids(object):
         self.nz = nz
 
         self.area = area
+        
+    def save(self, filename):
+        """!
+        Save a grid object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_grid(filename):
+    """!
+    Create a grid object from a numpy arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    return reflGrids(load['x'], load['y'], load['z'], \
+                    load['nx'], load['ny'], load['nz'], load['area'])
 
 class frame(object):
     """!
@@ -251,4 +350,25 @@ class frame(object):
         self.pos = pos
         self.ori = ori
         self.transf = transf
+        
+    def save(self, filename):
+        """!
+        Save a frame object to a numpy compressed arrays (`.npz`) file.
+        
+        @param filename The path and name of the file to save to."""
+        np.savez_compressed(filename, **self.__dict__)
+        
+def load_frame(filename):
+    """!
+    Create a grid object from a numpy arrays (`.npz`) file.
+    
+    @param filename The path and name of the file to load."""
+    load = np.load(filename)
+    
+    fr =  frame(load['size'], load['x'], load['y'], load['z'], \
+                    load['dx'], load['dy'], load['dz'])
+    
+    fr.setMeta(load['pos'], load['ori'], load['transf'])
+    
+    return fr
 
