@@ -1,0 +1,25 @@
+/**
+\page pubworks Published Works Using `PyPO`
+
+This page contains an overview of published works that use or cite `PyPO`, in order to track its usefulness and community impact.
+The list is ordered in chronological order, with the oldest work at the bottom, and the most recent work at the top.
+
+- [[4](https://doi.org/10.48550/arXiv.2601.21603)] Karatsu et al. 
+"DESHIMA 2.0: A 200-400 GHz Ultra-wideband Integrated Superconducting Spectrometer",
+<em>Arxiv (2026)</em>
+
+- [[3](https://doi.org/10.1117/1.JATIS.11.2.025007)] Moerman et al. 
+"Alignment and optical verification of DESHIMA 2.0 at ASTE",
+<em>Journal of Astronomical Telescopes, Instruments, and Systems **11(2)**, 025007 (2025)</em>
+
+- [[2](https://doi.org/10.1117/12.3021879)] Sanchez-Brea et al. 
+"Diffractio: an open-source library for diffraction and
+interference calculations
+",
+<em>Proc. SPIE 12997, Optics and Photonics for Advanced Dimensional Metrology III, **129971B** (2024)</em>
+
+- [[1](https://doi.org/10.1051/0004-6361/202348525)] Moerman et al. 
+"Optimisation-based alignment of wide-band integrated superconducting spectrometers for submillimeter astronomy",
+<em>Astronomy & Astrophysics, **684**, A161 (2024)</em>
+
+*/
