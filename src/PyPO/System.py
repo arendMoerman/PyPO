@@ -32,6 +32,7 @@ import PyPO.PyPOTypes as PTypes
 import PyPO.Checks as PChecks
 import PyPO.Config as Config
 from PyPO.CustomLogger import CustomLogger
+import PyPO.Colormaps as cmaps
 import PyPO.Plotter as PPlot
 import PyPO.Efficiencies as Effs
 import PyPO.FitGauss as FGauss
@@ -2019,8 +2020,12 @@ class System(object):
             vmin = np.nanmax([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmax - abs(vmin)
             
         labels = [f'{comp.name} $\phi=${phi:.0f}°', f'{comp.name} $\phi=${phi+90:.0f}°']
-            
-        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units, labels=labels)
+        
+        if title == "":
+            title = f"{name_field} Cuts"
+        
+        fig, ax = PPlot.plotBeamCut(E_strip, E_cut, vmin, vmax, units, title=title, scale=scale, label=labels[0])
+        PPlot.plotBeamCut(H_strip, H_cut, figax=(fig,ax), label=labels[1])
         
         if comp_cross is not FieldComponents.NONE:
             if norm:
@@ -2029,19 +2034,15 @@ class System(object):
                 norm_cross = False
             cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
             labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
-            PPlot.plotBeamCut(cr45_cut, cr135_cut, cr45_strip, cr135_strip, vmin, vmax, units, figax=(fig, ax), labels=labels)
+            PPlot.plotBeamCut(cr45_strip, cr45_cut, figax=(fig, ax), labels=labels[0])
+            PPlot.plotBeamCut(cr135_strip, cr135_cut, figax=(fig, ax), labels=labels[1])
 
-        if title is not "":
-            fig.suptitle(title)
-
+        if save:
+            pt.savefig(fname=self.savePath + '{}_cuts.png'.format(name),
+                        bbox_inches='tight', dpi=300)
+        
         if ret:
             return fig, ax
-
-        elif save:
-            pt.savefig(fname=self.savePath + '{}_EH_cut.jpg'.format(name),
-                        bbox_inches='tight', dpi=300)
-            pt.close()
-
         elif show:
             pt.show()
 
@@ -2351,18 +2352,22 @@ class System(object):
         if comp == FieldComponents.NONE:
             field_comp = self.scalarfields[name_obj].S
             name_surface = self.scalarfields[name_obj].surf
+            k = self.scalarfields[name_obj].k
         
         elif isinstance(comp, FieldComponents):
             PChecks.check_fieldSystem(name_obj, self.fields, self.clog, extern=True)
             field = self.fields[name_obj]
             name_surface = field.surf
+            k = field.k
             field_comp = field[comp.value]
 
         elif isinstance(comp, CurrentComponents):
             PChecks.check_currentSystem(name_obj, self.currents, self.clog, extern=True)
             field = self.currents[name_obj] 
             name_surface = field.surf
+            k = field.k
             field_comp = field[comp.value]
+
 
         if contour is not None:
             if contour_comp == FieldComponents.NONE:
@@ -2380,14 +2385,22 @@ class System(object):
             contour_pl = contour
 
         plotObject = self.system[name_surface]
+        
+        if plotObject['gmode'] == 2:
+            reflGrid = self.generateGrids(name_surface, spheric=False)        
+        else:
+            reflGrid = self.generateGrids(name_surface)
 
         if title is None:
             title = f"{name_obj} {comp.name}"
 
-        fig, ax = PPlot.plotBeam2D(plotObject, field_comp, contour_pl,
-                        vmin, vmax, levels, amp_only,
-                        norm, aperDict, scale, project,
-                        units, title, titleA, titleP, unwrap_phase, correct_phase, field.k)
+        fig, ax = PPlot.plotBeam2D(reflGrid, field_comp, gmode=plotObject['gmode'], 
+                                   contour=contour_pl, levels=levels,
+                                   aperDict=aperDict,
+                                   norm=norm, vmin=vmin, vmax=vmax, 
+                                   amp_only=amp_only, unwrap_phase=unwrap_phase, correct_phase=correct_phase, k=k,
+                                   project=project, units=units,
+                                   figax=None, title=title, cmap=cmaps.parula)
         if ret:
             return fig, ax
 
