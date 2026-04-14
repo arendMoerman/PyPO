@@ -1947,10 +1947,14 @@ class System(object):
             h_cut = 20 * np.log10(h_cut / max_norm)
             e_cut = 20 * np.log10(e_cut / max_norm)
         
-        elif scale == Scales.LIN:
+        elif scale == Scales.AMP:  # Uses amplitude, not power?
             h_cut = h_cut / max_norm
             e_cut = e_cut / max_norm
 
+        else: # scale == Scales.LIN:
+            h_cut = (h_cut / max_norm)**2
+            e_cut = (e_cut / max_norm)**2
+            
         h_strip = np.linspace(x_edges[0], x_edges[1], interp)
         e_strip = np.linspace(y_edges[0], y_edges[1], interp)
         
@@ -2010,22 +2014,22 @@ class System(object):
         @returns fig Figure object.
         @returns ax Axes object.
         """
+        # Always get the cuts in amplitude units - we will apply the scales in the plotter code.
+        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=Scales.AMP)
 
-        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=scale)
-
-        vmax = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmax is None else vmax
+        vmax = np.nanmax([np.nanmax(np.abs(E_cut)), np.nanmax(np.abs(H_cut))]) if vmax is None else vmax
         if norm:
-            vmin = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmin is None else vmin
+            vmin = np.nanmin([np.nanmin(np.abs(E_cut)), np.nanmin(np.abs(H_cut))]) if vmin is None else vmin
         else:
-            vmin = np.nanmax([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmax - abs(vmin)
+            vmin = np.nanmin([np.nanmin(np.abs(E_cut)), np.nanmin(np.abs(H_cut))]) if vmin is None else vmax - abs(vmin)
             
         labels = [f'{comp.name} $\phi=${phi:.0f}°', f'{comp.name} $\phi=${phi+90:.0f}°']
         
         if title == "":
             title = f"{name_field} Cuts"
         
-        fig, ax = PPlot.plotBeamCut(E_strip, E_cut, vmin, vmax, units, title=title, scale=scale, label=labels[0])
-        PPlot.plotBeamCut(H_strip, H_cut, figax=(fig,ax), label=labels[1])
+        fig, ax = PPlot.plotBeamCut(E_strip, E_cut, units=units, vmin=vmin, vmax=vmax, amp_only=True, title=title, scale=scale, label=labels[0])
+        PPlot.plotBeamCut(H_strip, H_cut, amp_only=True, figax=(fig,ax), label=labels[1])
         
         if comp_cross is not FieldComponents.NONE:
             if norm:
@@ -2034,8 +2038,8 @@ class System(object):
                 norm_cross = False
             cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
             labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
-            PPlot.plotBeamCut(cr45_strip, cr45_cut, figax=(fig, ax), labels=labels[0])
-            PPlot.plotBeamCut(cr135_strip, cr135_cut, figax=(fig, ax), labels=labels[1])
+            PPlot.plotBeamCut(cr45_strip, cr45_cut, amp_only=True, figax=(fig, ax), labels=labels[0])
+            PPlot.plotBeamCut(cr135_strip, cr135_cut, amp_only=True, figax=(fig, ax), labels=labels[1])
 
         if save:
             pt.savefig(fname=self.savePath + '{}_cuts.png'.format(name),

@@ -60,13 +60,13 @@ def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
     """
     if isinstance(correct_phase, bool) and correct_phase:
         correct_phase = 1
-        
+
     if isinstance(gmode, str):
         gmode = GridModes._member_map_[gmode]
-    if isinstance(gmode, int):
+    elif isinstance(gmode, int):
         gmode = GridModes._value2member_map_[gmode]
 
-    if not gmode.value == 2:
+    if not gmode == GridModes.AoE:
         if units.dimension != 'spatial':
             units = Units.MM
         if project == Projections.xy:
@@ -101,18 +101,27 @@ def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
             grid_x2 = reflGrid.x
             ff_flag = False
             comps = ["y", "x"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0,0, np.sign(correct_phase)))
 
         elif project == Projections.zy:
             grid_x1 = reflGrid.z
             grid_x2 = reflGrid.y
             ff_flag = False
             comps = ["z", "y"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((np.sign(correct_phase, 0, 0)))
 
         elif project == Projections.xz:
             grid_x1 = reflGrid.x
             grid_x2 = reflGrid.z
             ff_flag = False
             comps = ["x", "z"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0, np.sign(correct_phase)), 0)
 
     else: # a farfield grid
         if units.dimension != 'angular':
@@ -122,13 +131,13 @@ def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
             grid_x1 = reflGrid.x
             grid_x2 = reflGrid.y
             ff_flag = True
-            comps = ["\mathrm{Az}", "\mathrm{El}"]
+            comps = ["\\mathrm{Az}", "\\mathrm{El}"]
 
         elif project == Projections.yx:
             grid_x1 = reflGrid.y
             grid_x2 = reflGrid.x
             ff_flag = True
-            comps = ["\mathrm{El}", "\mathrm{Az}"]
+            comps = ["\\mathrm{El}", "\\mathrm{Az}"]
             
         else:
             raise ValueError("Cannot form projections involving z for farfield grids")
@@ -147,13 +156,10 @@ def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
             fig, ax = figax
 
         if correct_phase is not False:
-            if isinstance(correct_phase, bool):
-                correct_phase = 1
-                
             if isinstance(correct_phase, int) or isinstance(correct_phase, float):
                 correct_phase = int(np.sign(correct_phase))
                 # Correct phase for z-axis displacement
-                if gmode == 1:
+                if gmode == GridModes.uv:
                     correct_phase = correct_phase*np.array((np.mean(reflGrid.nx[0,:]), np.mean(reflGrid.ny[0,:]), np.mean(reflGrid.nz[0,:])))
                     vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
                 else:
@@ -171,17 +177,17 @@ def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
             
             offset = np.linalg.vecdot(vnorm, np.stack((reflGrid.x, reflGrid.y, reflGrid.z), axis=-1))
 
-            if gmode == 1:
+            if gmode == GridModes.uv:
                 r0 = np.mean(offset[0,:])
                 phase_factor = np.exp(-1j*k*(offset-r0))
-            elif gmode == 0:
+            elif gmode == GridModes.xy:
                 r0 = offset[n,m]
                 phase_factor = np.exp(-1j*k*(offset-r0))
             else: # Don't know what to do for farfields
                 phase_factor = 1.0
         else:
             phase_factor = 1.0
-
+        
         if scale == Scales.LIN:
             if norm:
                 max_field = np.nanmax(np.absolute(field))
@@ -622,6 +628,12 @@ def plotBeamCut(strip, cut, units=Units.DEG, vmin=None, vmax=None, scale=Scales.
     else:
         fnorm = 1.0
         
+    if vmax is None:
+        vmax = np.nanmax(field/fnorm)
+    
+    if vmin is None:
+        vmin = np.nanmin(field/fnorm)        
+        
     if units.dimension == 'angular':
         xlabel = f'$\\theta$ ({units.name})'
     else:
@@ -630,7 +642,9 @@ def plotBeamCut(strip, cut, units=Units.DEG, vmin=None, vmax=None, scale=Scales.
     if not amp_only:
         ax[0].plot(strip/units, field/fnorm, **kwargs)
         ax[1].plot(strip/units, np.angle(cut), **kwargs)
-        ax[0].set_ylim(vmin, vmax)
+        
+        if figax is None:
+            ax[0].set_ylim(vmin, vmax)
 
         ax[0].set_xlabel(xlabel)
         ax[1].set_xlabel(xlabel)
@@ -642,9 +656,10 @@ def plotBeamCut(strip, cut, units=Units.DEG, vmin=None, vmax=None, scale=Scales.
 
     else:
         ax.plot(strip/units, field/fnorm, **kwargs)
-
-        ax.set_ylim(vmin, vmax)
-
+        
+        if figax is None:
+            ax.set_ylim(vmin, vmax)
+        
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         
