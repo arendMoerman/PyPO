@@ -632,7 +632,7 @@ def plotBeamCut(strip, cut, units=Units.DEG, vmin=None, vmax=None, scale=Scales.
         vmax = np.nanmax(field/fnorm)
     
     if vmin is None:
-        vmin = np.nanmin(field/fnorm)        
+        vmin = np.nanmin(field/fnorm)
         
     if units.dimension == 'angular':
         xlabel = f'$\\theta$ ({units.name})'
