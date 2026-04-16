@@ -2035,7 +2035,7 @@ class System(object):
                 norm_cross = comp
             else:
                 norm_cross = False
-            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
+            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross, scale=Scales.AMP)
             labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
             PPlot.plotBeamCut(cr45_strip, cr45_cut, units=units, amp_only=True, scale=scale, figax=(fig, ax), label=labels[0])
             PPlot.plotBeamCut(cr135_strip, cr135_cut, units=units, amp_only=True, scale=scale, figax=(fig, ax), label=labels[1])
