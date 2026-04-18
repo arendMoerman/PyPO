@@ -189,10 +189,11 @@ void Parabola_uv(T *parabola, U xu_lo, U xu_up, U yv_lo,
         for (int j=0; j < ncy; j++)
         {
             v = (j * dv + yv_lo) * M_PI/180;
-            ecc_fac = 1 / sqrt(1 - (ecc_uv*cos(v))*(ecc_uv*cos(v))); //consider moving into separate loop + array alloc
-            duv = du0 * majmin * ecc_fac; 
-            u = i*duv + xu_lo*ecc_fac;
-            dudv = -u * ecc_fac*ecc_fac * ecc_uv*ecc_uv * cos(v) * sin(v);
+            ecc_fac = sqrt(1 - ecc_uv*ecc_uv*sin(v)*sin(v));
+            duv = du0 / ecc_fac; 
+            u = i*duv + xu_lo / ecc_fac;
+
+            dudv = u / (ecc_fac*ecc_fac) * ecc_uv*ecc_uv * cos(v) * sin(v);
 
             idx = i*ncy + j;
 
@@ -376,10 +377,11 @@ void Hyperbola_uv(T *hyperbola, U xu_lo, U xu_up, U yv_lo,
         for (int j=0; j < ncy; j++)
         {
             v = (j * dv + yv_lo) * M_PI/180;
-            ecc_fac = 1 / sqrt(1 - (ecc_uv*cos(v))*(ecc_uv*cos(v))); //consider moving into separate loop + array alloc
-            duv = du0 * majmin * ecc_fac; 
-            u = i*duv + xu_lo*ecc_fac;
-            dudv = -u * ecc_fac*ecc_fac * ecc_uv*ecc_uv * cos(v) * sin(v);
+            ecc_fac = sqrt(1 - ecc_uv*ecc_uv*sin(v)*sin(v));
+            duv = du0 / ecc_fac; 
+            u = i*duv + xu_lo / ecc_fac;
+
+            dudv = u / (ecc_fac*ecc_fac) * ecc_uv*ecc_uv * cos(v) * sin(v);
 
             idx = i*ncy + j;
 
@@ -564,10 +566,11 @@ void Ellipse_uv(T *ellipse, U xu_lo, U xu_up, U yv_lo,
         for (int j=0; j < ncy; j++)
         {
             v = (j * dv + yv_lo) * M_PI/180;
-            ecc_fac = 1 / sqrt(1 - (ecc_uv*cos(v))*(ecc_uv*cos(v))); //consider moving into separate loop + array alloc
-            duv = du0 * majmin * ecc_fac; 
-            u = i*duv + xu_lo*ecc_fac;
-            dudv = -u * ecc_fac*ecc_fac * ecc_uv*ecc_uv * cos(v) * sin(v);
+            ecc_fac = sqrt(1 - ecc_uv*ecc_uv*sin(v)*sin(v));
+            duv = du0 / ecc_fac; 
+            u = i*duv + xu_lo / ecc_fac;
+
+            dudv = u / (ecc_fac*ecc_fac) * ecc_uv*ecc_uv * cos(v) * sin(v);
 
             idx = i*ncy + j;
 
@@ -716,8 +719,6 @@ void Plane_uv(T *plane, U xu_lo, U xu_up, U yv_lo,
     U u, du0, duv;
     U v, dv;
     U x, y;
-
-    U majmin = sqrt(1 - ecc_uv*ecc_uv);
     
     du0 = (xu_up - xu_lo) / (ncx - 1);
     /* For v (polar angle) range, drop the -1, so that the upper value is excluded 
@@ -739,9 +740,9 @@ void Plane_uv(T *plane, U xu_lo, U xu_up, U yv_lo,
         for (int j=0; j < ncy; j++)
         {
             v = (j * dv + yv_lo) * M_PI/180;
-            ecc_fac = 1 / sqrt(1 - (ecc_uv*cos(v))*(ecc_uv*cos(v))); //consider moving into separate loop + array alloc
-            duv = du0 * majmin * ecc_fac; 
-            u = i*duv + xu_lo*ecc_fac;
+            ecc_fac = sqrt(1 - ecc_uv*ecc_uv*sin(v)*sin(v));
+            duv = du0 / ecc_fac; 
+            u = i*duv + xu_lo / ecc_fac;
             
             idx = i*ncy + j;
             
