@@ -102,7 +102,7 @@ def fitGaussAbs(field, surfaceObject, thres, scale, ratio=1):
         fit_field = 20 * np.log10(_field)
         mask_f = fit_field >= thres 
 
-    elif scale == Scales.LIN:
+    else: # scale == Scales.AMP or Scales.LIN
         fit_field = _field
         mask_f = fit_field >= 10**(thres/20)
 
@@ -112,6 +112,8 @@ def fitGaussAbs(field, surfaceObject, thres, scale, ratio=1):
     y_max = y[idx_max] 
 
     idx_rows, idx_cols = MUtils.findConnectedSubsets(mask_f, 1, idx_max)
+    
+    # This seems to assume xy grids
     _xmin = x[np.min(idx_cols), idx_max[0]]
     _xmax = x[np.max(idx_cols), idx_max[0]]
    
