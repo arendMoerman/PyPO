@@ -16,118 +16,157 @@ warnings.filterwarnings("ignore")
 import PyPO.PlotConfig
 import PyPO.Colormaps as cmaps
 import PyPO.BindRefl as BRefl
-from PyPO.Enums import Projections, FieldComponents, CurrentComponents, Units, Scales
+from PyPO.Enums import Projections, GridModes, FieldComponents, CurrentComponents, Units, Scales
 
-def plotBeam2D(plotObject, field, contour,
-                vmin, vmax, levels, amp_only,
-                norm, aperDict, scale, project,
-                units, title, titleA, titleP, unwrap_phase, correct_phase=False, k=None):
+def plotBeam2D(reflGrid, field, gmode=GridModes.xy,
+               contour=None, contour_comp=FieldComponents.Ex, levels=None, 
+               aperDict=None,
+               norm=True, vmin=None, vmax=None, scale=Scales.dB, 
+               amp_only=False, unwrap_phase=False, correct_phase=False, k=None,
+               project=Projections.xy, units=Units.MM, 
+               figax=None, figsize=None, 
+               title=None, titleA="Amplitude", titleP="Phase", **kwargs):
     """!
     Generate a 2D plot of a field or current.
 
-    @param plotObject A reflDict containing surface on which to plot beam. 
+    @param reflGrid A reflGrid containing the surface grid which to plot beam. 
     @param field PyPO field or current component to plot.
-    @param contour A PyPO field or current component to plot as contour.
+    @param contour A fields or currents object to plot as contour.
+    @param contour_comp The component of the contour fields or currents object to plot as contours
+    @param levels Levels for contourplot.
+    @param aperDict Plot an aperture defined in an aperDict object along with the field or current patterns. Default is None.
+    @param norm Normalise field.
     @param vmin Minimum amplitude value to display. Default is -30.
     @param vmax Maximum amplitude value to display. Default is 0.
-    @param levels Levels for contourplot.
-    @param amp_only Only plot amplitude pattern. Default is False.
-    @param norm Normalise field (only relevant when plotting linear scale).
-    @param aperDict Plot an aperture defined in an aperDict object along with the field or current patterns. Default is None.
     @param scale Plot amplitude in decibels, logarithmic or linear scale. Instance of Scales enum object.
-    @param project Set abscissa and ordinate of plot. Should be given as an instance of the Projection enum.
-    @param units The units of the axes. Instance of Units enum object.
-    @param title An overall title for the plot. Defaults to the field name and component.
-    @param titleA Title of the amplitude plot. Default is "Amp".
-    @param titleP Title of the phase plot. Default is "Phase".
+    @param amp_only Only plot amplitude pattern. Default is False.
     @param unwrap_phase Unwrap the phase pattern. Prevents annular structure in phase pattern. Default is False.
     @param correct_phase Boolean or 3 element numpy array. Applies a phase factor to the field equal to
             k*displacement of the grid along the Z-axis (True) or direction of the 3-vector.
     @param k Wavenumber to use for phase correction. Only used if correct_phase is not False.
-
+    @param project Set abscissa and ordinate of plot. Should be given as an instance of the Projection enum.
+    @param units The units of the axes. Instance of Units enum object.
+    @param figax Tuple of Matplotlib Figure and Axes object or np.array of Axes objects to use for the plots. If none, create new figure.
+    @param figsize Tuple with Matplotlib Figure size. Defaults to (10,5) or (5,5). Has no effect if figax is given.
+    @param title An overall title for the plot. Defaults to the field name and component.
+    @param titleA Title of the amplitude plot. Default is "Amp".
+    @param titleP Title of the phase plot. Default is "Phase".
+    @param **kwargs Additional keywords to pass to Axes.pcolormesh Matplotlib methods.
+    
     @returns fig Figure object containing plot.
     @returns ax Axes containing the axes of the plot.
 
     @see aperDict
     """
+    if isinstance(correct_phase, bool) and correct_phase:
+        correct_phase = 1
 
-    # With far-field, generate grid without converting to spherical
-    max_field = np.max(np.absolute(field))
-    grids = BRefl.generateGrid(plotObject, transform=True, spheric=False)
-    if not plotObject["gmode"] == 2:
+    if isinstance(gmode, str):
+        gmode = GridModes._member_map_[gmode]
+    elif isinstance(gmode, int):
+        gmode = GridModes._value2member_map_[gmode]
+
+    if not gmode == GridModes.AoE:
         if units.dimension != 'spatial':
             units = Units.MM
         if project == Projections.xy:
-            grid_x1 = grids.x
-            grid_x2 = grids.y
+            grid_x1 = reflGrid.x
+            grid_x2 = reflGrid.y
             ff_flag = False
             comps = ["x", "y"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0,0, np.sign(correct_phase)))
 
         elif project == Projections.yz:
-            grid_x1 = grids.y
-            grid_x2 = grids.z
+            grid_x1 = reflGrid.y
+            grid_x2 = reflGrid.z
             ff_flag = False
             comps = ["y", "z"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((np.sign(correct_phase, 0, 0)))
 
         elif project == Projections.zx:
-            grid_x1 = grids.z
-            grid_x2 = grids.x
+            grid_x1 = reflGrid.z
+            grid_x2 = reflGrid.x
             ff_flag = False
             comps = ["z", "x"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0, np.sign(correct_phase)), 0)
 
         elif project == Projections.yx:
-            grid_x1 = grids.y
-            grid_x2 = grids.x
+            grid_x1 = reflGrid.y
+            grid_x2 = reflGrid.x
             ff_flag = False
             comps = ["y", "x"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0,0, np.sign(correct_phase)))
 
         elif project == Projections.zy:
-            grid_x1 = grids.z
-            grid_x2 = grids.y
+            grid_x1 = reflGrid.z
+            grid_x2 = reflGrid.y
             ff_flag = False
             comps = ["z", "y"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((np.sign(correct_phase, 0, 0)))
 
         elif project == Projections.xz:
-            grid_x1 = grids.x
-            grid_x2 = grids.z
+            grid_x1 = reflGrid.x
+            grid_x2 = reflGrid.z
             ff_flag = False
             comps = ["x", "z"]
+            if isinstance(correct_phase, int):
+                if correct_phase: 
+                    correct_phase = np.array((0, np.sign(correct_phase)), 0)
 
-    else: # probably a farfield grid
+    else: # a farfield grid
         if units.dimension != 'angular':
             units = Units.DEG
             
         if project == Projections.xy:
-            grid_x1 = grids.x
-            grid_x2 = grids.y
+            grid_x1 = reflGrid.x
+            grid_x2 = reflGrid.y
             ff_flag = True
-            comps = ["\mathrm{Az}", "\mathrm{El}"]
+            comps = ["\\mathrm{Az}", "\\mathrm{El}"]
 
         elif project == Projections.yx:
-            grid_x1 = grids.y
-            grid_x2 = grids.x
+            grid_x1 = reflGrid.y
+            grid_x2 = reflGrid.x
             ff_flag = True
-            comps = ["\mathrm{El}", "\mathrm{Az}"]
+            comps = ["\\mathrm{El}", "\\mathrm{Az}"]
+            
+        else:
+            raise ValueError("Cannot form projections involving z for farfield grids")
 
         if not ((units == Units.DEG) or (units == Units.AM) or (units == Units.AS)):
             units = Units.DEG
+            
     if not amp_only:
-        fig, ax = pt.subplots(1,2, figsize=(10,5), gridspec_kw={'wspace':0.5})
+        # Set a default figure size if none are given
+        if figsize is None:
+            figsize = (10,5)
+            
+        if not figax:
+            fig, ax = pt.subplots(1,2, figsize=figsize, gridspec_kw={'wspace':0.5})
+        else:
+            fig, ax = figax
 
         if correct_phase is not False:
-            if type(correct_phase) is bool:
-                correct_phase = 1
-                
-            if type(correct_phase) is int or type(correct_phase) is float:
+            if isinstance(correct_phase, int) or isinstance(correct_phase, float):
                 correct_phase = int(np.sign(correct_phase))
                 # Correct phase for z-axis displacement
-                if plotObject['gmode'] == 1:
-                    correct_phase = correct_phase*np.array((np.mean(grids.nx[0,:]), np.mean(grids.ny[0,:]), np.mean(grids.nz[0,:])))
+                if gmode == GridModes.uv:
+                    correct_phase = correct_phase*np.array((np.mean(reflGrid.nx[0,:]), np.mean(reflGrid.ny[0,:]), np.mean(reflGrid.nz[0,:])))
                     vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
-                elif plotObject['gmode'] == 0:
-                    shape = grids.z.shape
-                    n,m = int(shape/2)
-                    vnorm = correct_phase*np.array((grids.nx[n,m], grids.ny[n,m], grids.nz[n, m]))
+                else:
+                    shape = np.array(reflGrid.z.shape)
+                    n = int(shape[0]/2)
+                    m = int(shape[1]/2)
+                    vnorm = correct_phase*np.array((reflGrid.nx[n,m], reflGrid.ny[n,m], reflGrid.nz[n, m]))
             else: # Correct_phase is a vector
                 try:
                     if len(correct_phase) != 3:
@@ -136,25 +175,25 @@ def plotBeam2D(plotObject, field, contour,
                     raise ValueError("correct_phase must be either boolean, number or np.ndarray((nx, ny, nz))")
                 vnorm = correct_phase / np.linalg.vector_norm(correct_phase)
             
-            offset = np.linalg.vecdot(vnorm, np.stack((grids.x, grids.y, grids.z), axis=-1))
+            offset = np.linalg.vecdot(vnorm, np.stack((reflGrid.x, reflGrid.y, reflGrid.z), axis=-1))
 
-            if plotObject['gmode'] == 1:
+            if gmode == GridModes.uv:
                 r0 = np.mean(offset[0,:])
                 phase_factor = np.exp(-1j*k*(offset-r0))
-            elif plotObject['gmode'] == 0:
+            elif gmode == GridModes.xy:
                 r0 = offset[n,m]
                 phase_factor = np.exp(-1j*k*(offset-r0))
             else: # Don't know what to do for farfields
                 phase_factor = 1.0
         else:
             phase_factor = 1.0
-
-
+        
         if scale == Scales.LIN:
             if norm:
+                max_field = np.nanmax(np.absolute(field))
                 field_pl = np.absolute(field) / max_field
                 if contour is not None:
-                    contour = np.absolute(contour) / np.max(np.absolute(contour))
+                    contour = np.absolute(contour) / np.nanmax(np.absolute(contour))
             
             else:
                 field_pl = np.absolute(field)
@@ -172,8 +211,8 @@ def plotBeam2D(plotObject, field, contour,
                 phase = np.angle(field*phase_factor)
             
             ampfig = ax[0].pcolormesh(grid_x1/units, grid_x2/units, field_pl**2,
-                                    vmin=vmin, vmax=vmax, cmap=cmaps.parula, shading='auto')
-            phasefig = ax[1].pcolormesh(grid_x1/units, grid_x2/units, phase, cmap=cmaps.parula, shading='auto')
+                                    vmin=vmin, vmax=vmax, **kwargs)
+            phasefig = ax[1].pcolormesh(grid_x1/units, grid_x2/units, phase, **kwargs)
 
             if contour is not None:
                 cont0 = ax[0].contour(grid_x1/units, grid_x2/units, contour**2, levels, cmap=cm.binary, linewidths=0.5)
@@ -184,6 +223,7 @@ def plotBeam2D(plotObject, field, contour,
 
         if scale == Scales.AMP:
             if norm:
+                max_field = np.nanmax(np.absolute(field))
                 field_pl = np.absolute(field) / max_field
                 if contour is not None:
                     contour = np.absolute(contour) / np.max(np.absolute(contour))
@@ -204,8 +244,8 @@ def plotBeam2D(plotObject, field, contour,
                 phase = np.angle(field*phase_factor)
             
             ampfig = ax[0].pcolormesh(grid_x1 / units.value, grid_x2 / units.value, field_pl,
-                                    vmin=vmin, vmax=vmax, cmap=cmaps.parula, shading='auto')
-            phasefig = ax[1].pcolormesh(grid_x1 / units.value, grid_x2 / units.value, phase, cmap=cmaps.parula, shading='auto')
+                                    vmin=vmin, vmax=vmax, **kwargs)
+            phasefig = ax[1].pcolormesh(grid_x1 / units.value, grid_x2 / units.value, phase, **kwargs)
 
             if contour is not None:
                 cont0 = ax[0].contour(grid_x1 / units.value, grid_x2 / units.value, contour, levels, cmap=cm.binary, linewidths=0.5)
@@ -221,6 +261,7 @@ def plotBeam2D(plotObject, field, contour,
                 titleP += " (rad)"
                 
             if norm:
+                max_field = np.nanmax(np.absolute(field))
                 field_dB = 20 * np.log10(np.absolute(field) / max_field)
             else:
                 field_dB = 20 * np.log10(np.absolute(field))
@@ -244,8 +285,8 @@ def plotBeam2D(plotObject, field, contour,
                 phase = np.angle(field*phase_factor)
             
             ampfig = ax[0].pcolormesh(grid_x1/units, grid_x2/units, field_dB,
-                                    vmin=vmin, vmax=vmax, cmap=cmaps.parula, shading='auto')
-            phasefig = ax[1].pcolormesh(grid_x1/units, grid_x2/units, phase, cmap=cmaps.parula, shading='auto')
+                                    vmin=vmin, vmax=vmax, **kwargs)
+            phasefig = ax[1].pcolormesh(grid_x1/units, grid_x2/units, phase, **kwargs)
             
 
             if contour is not None:
@@ -274,15 +315,26 @@ def plotBeam2D(plotObject, field, contour,
         ax[1].set_title(titleP, y=1.08)
         ax[1].set_aspect(1)
 
-
+    # Amplitude only plotting
     else:
-        fig, ax = pt.subplots(1,1, figsize=(5,5))
+        if figsize is None:
+            figsize = (5,5)
+          
+        if not figax:
+            fig, ax = pt.subplots(1,1, figsize=figsize, gridspec_kw={'wspace':0.5})
+        else:
+            fig, ax = figax
+            
+        if isinstance(ax, np.ndarray):
+            ax = ax[0]
 
         divider = make_axes_locatable(ax)
+        # TODO: Need to fix colorbar height and location.  Gridspec does not work for single plot
         cax = divider.append_axes('right', size='5%', pad=0.05)
 
         if scale == Scales.LIN:
             if norm:
+                max_field = np.nanmax(np.absolute(field))
                 field_pl = np.absolute(field) / max_field
                 if contour is not None:
                     contour_pl = np.absolute(contour) / np.max(np.absolute(contour))
@@ -292,29 +344,62 @@ def plotBeam2D(plotObject, field, contour,
                 if contour is not None:
                     contour_pl = np.absolute(contour)
 
-            vmin = np.min(field_pl) if vmin is None else vmin
-            vmax = np.max(field_pl) if vmax is None else vmax
+            vmin = np.min(field_pl)**2 if vmin is None else vmin
+            vmax = np.max(field_pl)**2 if vmax is None else vmax
             
             ampfig = ax.pcolormesh(grid_x1/units, grid_x2/units, field_pl**2,
-                                    vmin=vmin, vmax=vmax, cmap=cmaps.parula, shading='auto')
+                                    vmin=vmin, vmax=vmax, **kwargs)
 
             if contour is not None:
                 cont = ax.contour(grid_x1/units, grid_x2/units, contour_pl**2, levels, cmap=cm.binary, linewidths=0.5)
                 ax.clabel(cont)
-        
-        elif scale == Scales.dB:
-            if titleA == "Power":
-                titleA += " / dB"
-            field_dB = 20 * np.log10(np.absolute(field) / max_field)
+                
+        elif scale==Scales.AMP:
+            if titleA == "Amplitude":
+                titleA += " / √W"
+            
+            if norm:
+                max_field = np.nanmax(np.absolute(field))
+                field_pl = np.absolute(field) / max_field
+            else:
+                field_pl = np.absolute(field)
+                
+            if contour is not None:
+                if norm:
+                    contour_pl = np.absolute(contour) / np.nanmax(np.absolute(contour))
+                else:
+                    contour_pl = np.absolute(contour)
+            
+            vmin = np.min(field_pl) if vmin is None else vmin
+            vmax = np.max(field_pl) if vmax is None else vmax
+            
+            ampfig = ax.pcolormesh(grid_x1/units, grid_x2/units, field_pl,
+                                    vmin=vmin, vmax=vmax, **kwargs)
             
             if contour is not None:
-                contour_dB = 20 * np.log10(np.absolute(contour) / np.max(np.absolute(contour)))
+                cont = ax.contour(units.rdiv(grid_x1), units.rdiv(grid_x2), contour_pl, levels, cmap=cm.binary, linewidths=0.5)
+                ax.clabel(cont)
+        else: # scale == Scales.dB:
+            if titleA == "Power":
+                titleA += " / dB"
+            
+            if norm:
+                max_field = np.nanmax(np.absolute(field))
+                field_dB = 20 * np.log10(np.absolute(field) / max_field)
+            else:
+                field_dB = 20 * np.log10(np.absolute(field))
+                
+            if contour is not None:
+                if norm:
+                    contour_dB = 20 * np.log10(np.absolute(contour) / np.max(np.absolute(contour)))
+                else:
+                    contour_dB = 20 * np.log10(np.absolute(contour))
             
             vmin = np.min(field_dB) if vmin is None else vmin
             vmax = np.max(field_dB) if vmax is None else vmax
             
             ampfig = ax.pcolormesh(grid_x1/units, grid_x2/units, field_dB,
-                                    vmin=vmin, vmax=vmax, cmap=cmaps.parula, shading='auto')
+                                    vmin=vmin, vmax=vmax, **kwargs)
             
             if contour is not None:
                 cont = ax.contour(units.rdiv(grid_x1), units.rdiv(grid_x2), contour_dB, levels, cmap=cm.binary, linewidths=0.5)
@@ -323,13 +408,13 @@ def plotBeam2D(plotObject, field, contour,
         ax.set_ylabel(r"${}$ ({})".format(comps[1], units.name))
         ax.set_xlabel(r"${}$ ({})".format(comps[0], units.name))
 
-        ax.set_title(titleA, y=1.08)
+        ax.set_title(titleA, y=1.02)
         ax.set_box_aspect(1)
 
         c = fig.colorbar(ampfig, cax=cax, orientation='vertical')
     
     if title is not None:
-        fig.suptitle(title)
+        fig.suptitle(title)  # Set a position here
     
     if aperDict["plot"]:
         if aperDict["shape"] == "ellipse":
@@ -499,43 +584,89 @@ def plotSystem(systemDict, ax, fine, cmap,norm,
     #ax.set_box_aspect((1,1,1))
     ax.set_box_aspect((world_limits[1]-world_limits[0],world_limits[3]-world_limits[2],world_limits[5]-world_limits[4]))
 
-def plotBeamCut(x_cut, y_cut, x_strip, y_strip, vmin, vmax, units, scale=Scales.dB, figax=None, labels=None):
+def plotBeamCut(strip, cut, units=Units.DEG, vmin=None, vmax=None, scale=Scales.dB, 
+                norm=False, amp_only=True, figax=None, title=None, **kwargs):
     """!
-    Plot two beam cuts in the same figure.
+    Plot a beam cut
 
-    @param x_cut E-plane.
-    @param y_cut H-plane.
-    @param x_strip Co-ordinates for plotting E-plane.
-    @param y_strip Co-ordinates for plotting H-plane.
+    @param strip Coordinates for plotting the cut.
+    @param cut Field values to plot
+    @param units Unit for x-axis. Instance of Units enum object.
     @param vmin Minimum for plot range.
     @param vmax Maximum for plot range.
-    @param units Unit for x-axis. Instance of Units enum object.
+    @param scale The units of the y axis. Instance of Scales Enum object.
+    @param norm Normalise field.
+    @param amp_only Only plot amplitude pattern. Default is True.
+    @param figax Tuple of Matplotlib Figure and Axes object or np.array of Axes objects to use for the plots. If none, create new figure.
+    @param title An overall title for the plot. Defaults to the field name and component.
+    @param **kwargs Additional keyword arguments to pass to the Matplotlib Axes.plot method
 
     @returns fig Plot figure.
     @returns ax Plot axis.
     """
     if figax is None:
-        fig, ax = pt.subplots(1,1, figsize=(5,5)) 
+        if not amp_only:
+            fig, ax = pt.subplots(1,2, figsize=(10,5))
+        else:
+            fig, ax = pt.subplots(1,1, figsize=(5,5)) 
     else:
         fig, ax = figax
 
-    if labels is None:
-        labels = ["E-plane", "H-plane"]
-
-    ax.plot(x_strip/units, x_cut, label=labels[0])
-    ax.plot(y_strip/units, y_cut, ls="dashed", label=labels[1])
-
-    ax.set_xlim(np.nanmin(x_strip/units), np.nanmax(x_strip/units))
-    ax.set_ylim(vmin, vmax)
-
-    ax.set_xlabel(f"$\\theta$ ({units.name})")
     if scale.name == 'dB':
-        ax.set_ylabel("Power (dB)")
+        ylabel = "Power (dB)"
+        field = 20*np.log10(np.abs(cut))
     elif scale.name == 'LIN':
-        ax.set_ylabel("Power (Watts)")
+        ylabel = "Power (Watts)"
+        field = np.abs(cut)**2
     else:
-        ax.set_ylabel("Amplitude (√W)")
-    ax.legend(frameon=False, prop={'size': 13},handlelength=1)
+        ylabel = "Amplitude (√W)"
+        field = np.abs(cut)
+        
+    if norm:
+        fnorm = np.nanmax(field)
+        ylabel = "Normalized " + ylabel
+    else:
+        fnorm = 1.0
+        
+    if vmax is None:
+        vmax = np.nanmax(field/fnorm)
+    
+    if vmin is None:
+        vmin = np.nanmin(field/fnorm)
+        
+    if units.dimension == 'angular':
+        xlabel = f'$\\theta$ ({units.name})'
+    else:
+        xlabel = f'$\\rho$ ({units.name})'
+    
+    if not amp_only:
+        ax[0].plot(strip/units, field/fnorm, **kwargs)
+        ax[1].plot(strip/units, np.angle(cut), **kwargs)
+        
+        if figax is None:
+            ax[0].set_ylim(vmin, vmax)
+
+        ax[0].set_xlabel(xlabel)
+        ax[1].set_xlabel(xlabel)
+        
+        ax[0].set_xlabel(ylabel)
+        ax[1].set_xlabel("Phase (rad)")
+        
+        ax.legend(frameon=False, prop={'size': 13},handlelength=1)
+
+    else:
+        ax.plot(strip/units, field/fnorm, **kwargs)
+        
+        if figax is None:
+            ax.set_ylim(vmin, vmax)
+        
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        
+        ax.legend(frameon=False, prop={'size': 13},handlelength=1)
+        
+    if title:
+        fig.suptitle(title)
 
     return fig, ax
 
