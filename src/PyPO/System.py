@@ -1512,8 +1512,8 @@ class System(object):
         
         phase = np.exp(1.0j*k*n*dz)
         
-        # Check normalization
-        field = np.sqrt(_feedDict['power']) * np.where(rho < a, j0(jn_zeros(0, 1)*rho/a), 0.0) * phase
+        norm = np.sqrt(_feedDict['power']/(0.846703591814615*a**2))
+        field = norm * np.where(rho < a, j0(jn_zeros(0, 1)*rho/a), 0.0) * phase
 
         fields_c = self._compToFields(FieldComponents.Ex, field)
         fields_c.setMeta(name_surface, k)
