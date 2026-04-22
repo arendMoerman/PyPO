@@ -11,7 +11,7 @@ from time import time_ns
 
 import PyPO.Config as Config
 import PyPO.WorldParam as world
-from PyPO.Enums import FieldComponents, CurrentComponents, AperShapes, Objects
+from PyPO.Enums import FieldComponents, CurrentComponents, AperShapes, Objects, BeamModes, POModes
 
 nThreads_cpu = os.cpu_count() - 1 if os.cpu_count() > 1 else 1
 PO_modelist = ["JM", "EH", "JMEH", "EHP", "FF", "scalar"]
@@ -227,6 +227,13 @@ class InputTransformError(Exception):
 class InputReflError(Exception):
     """!
     Input reflector error. Raised when an error is encountered in an input reflector dictionary.
+    """
+
+    pass
+
+class InputSourceError(Exception):
+    """!
+    Input source error. Raised when an error is encountered in an source input dictionary.
     """
 
     pass
@@ -1111,7 +1118,7 @@ def check_PSDict(PSDict, nameList, clog):
 
         for err in errList:
             clog.error(err)
-        raise InputPOError()
+        raise InputSourceError()
 
 def check_GPODict(GPODict, nameList, clog):
     """!
@@ -1207,7 +1214,7 @@ def check_GPODict(GPODict, nameList, clog):
 
         for err in errList:
             clog.error(err)
-        raise InputPOError()
+        raise InputSourceError()
 
 def check_vecGPODict(vecGPODict, nameList, clog):
     """!
@@ -1281,6 +1288,13 @@ def check_vecGPODict(vecGPODict, nameList, clog):
         errStr += warnMsg_field('mode', 'vecGPODict', 'No mode given, assuming PEC')
         vecGPODict['mode'] = 2
         
+    if errStr:
+        errList = errStr.split("\n")[:-1]
+
+        for err in errList:
+            clog.error(err)
+        raise InputSourceError()
+        
 
 def calc_beam(vecGPODict, errStr):
     """!
@@ -1329,6 +1343,99 @@ def calc_beam(vecGPODict, errStr):
     else:
         errStr += errMsg_field("w0, z, w, R", "vecGPODict", "Not enough fields set to define beam.")
         
+        
+def check_scalarFeedDict(feedDict, nameList, clog):
+    """!
+    Check a scalar feed input dictionary
+    
+    @param feedDict A scalarFeedDict
+    @param nameList List containing the names of fields in the system
+    @param clog CustomLogger object
+    """
+    errStr = ""
+    
+    if "name" not in feedDict:
+        feedDict["name"] = "ScalarFeed"
+    
+    num = getIndex(feedDict["name"], nameList)
+
+    if num > 0:
+        feedDict["name"] = feedDict["name"] + "_{}".format(num)
+
+    # Check for wavelength, and check it is a positive number
+    if "lam" in feedDict:
+        if feedDict["lam"] == 0 + 0j:
+            clog.info(f"Never heard of a complex-valued wavelength of zero, but good try. Therefore changing wavelength now to 'lam' equals {np.pi:.42f}!")
+            feedDict["lam"] = np.pi
+
+        if not ((isinstance(feedDict["lam"], float) or isinstance(feedDict["lam"], int))):
+            errStr += errMsg_type("lam", type(feedDict["lam"]), "scalarFeedDict", [float, int])
+        
+        elif feedDict["lam"] < 0:
+            clog.warning(f"Encountered negative value {feedDict['lam']} in field 'lam' in scalarFeedDict {feedDict['name']}. Changing sign.")
+            feedDict["lam"] *= -1
+    else:
+        errStr += errMsg_field("lam", "feedDict")
+    
+    # Check for aperture radius, and check it is a positive number
+    if "a" in feedDict:
+        if feedDict["a"] == 0 + 0j:
+            clog.info(f"Can't have an aperture radius a of zero. Therefore changing it to twice the wavelength: a = {2*feedDict['lam']:.42f}!")
+            feedDict["a"] = feedDict["lam"]*2
+
+        if not ((isinstance(feedDict["a"], float) or isinstance(feedDict["a"], int))):
+            errStr += errMsg_type("a", type(feedDict["a"]), "scalarFeedDict", [float, int])
+        
+        elif feedDict["a"] < 0:
+            clog.warning(f"Encountered negative value {feedDict['a']} in field 'a' in scalarFeedDict {feedDict['name']}. Changing sign.")
+            feedDict["a"] *= -1
+    else:
+        errStr += errMsg_field("a", "feedDict")
+        
+    # Check for radius of phase curvature, and check it is a number
+    if "R" in feedDict:
+        if not ((isinstance(feedDict["R"], float) or isinstance(feedDict["R"], int))):
+            errStr += errMsg_type("R", type(feedDict["R"]), "scalarFeedDict", [float, int])
+    else:
+        clog.info(f"Radius of phase curvature not set. Setting it to zero!")
+        feedDict['R'] = 0.0
+            
+    # Check for refractive index of medium, and check it is a number. Silently default to 1.0
+    if "n" in feedDict:
+        if not ((isinstance(feedDict["n"], float) or isinstance(feedDict["n"], int))):
+            errStr += errMsg_type("n", type(feedDict["n"]), "scalarFeedDict", [float, int])
+    else:
+        feedDict['n'] = 1.0
+
+    # Check for power of source, and check it is a number. Silently default to 4π
+    if "power" in feedDict:
+        if not ((isinstance(feedDict["power"], float) or isinstance(feedDict["power"], int))):
+            errStr += errMsg_type("n", type(feedDict["power"]), "scalarFeedDict", [float, int])
+    else:
+        feedDict['power'] = 4*np.pi
+        
+    # Check for the mode of the source. Silently default to PEC
+    if "mode" in feedDict:
+        if not ((isinstance(feedDict["mode"], int)) or (isinstance(feedDict["mode"], str)) ):
+            errStr += errMsg_type("mode", type(feedDict["mode"]), "feedDict", [str, int])
+        if (isinstance(feedDict['mode'], str)):
+            if feedDict['mode'].lower() not in Beam_modelist:
+                errStr += errMsg_value('mode', feedDict['mode'], 'scalarFeedDict')
+            else:
+                feedDict['mode'] = Beam_modelist.index(feedDict['mode'].lower())
+        else:
+            if feedDict['mode'] not in range(3):
+                errStr += errMsg_value('mode', feedDict['mode'], 'feedDict')
+    else:
+        feedDict['mode'] = 2
+        
+    if errStr:
+        errList = errStr.split("\n")[:-1]
+
+        for err in errList:
+            clog.error(err)
+        raise InputSourceError()
+
 
 def check_runPODict(runPODict, elements, fields, currents, scalarfields, frames, clog):
     """!
