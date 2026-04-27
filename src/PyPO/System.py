@@ -1476,13 +1476,14 @@ class System(object):
 
     def createScalarFeed(self, scalarFeedDict : dict, name_surface : str):
         """!
-        Create a scalar feed, using the truncated Bessel function with spherical phase cap approximation.
+        Create a scalar feed (e.g. a well-designed corrugated horn), using the truncated Bessel function with 
+        spherical phase cap approximation.
         
         This method creates an approximation to the aperture field of a scalar feed such as a corrugated horn in the
         centered on the origin of the x-y plane and propagating in the positive z-direction.  Only the co-polar E field is created.
         
-        The feed is defined by the radius of the feed aperturea and the radius of curvature of the
-        spherical phase cap. For narrow flare angle scalar horns, the length of the horn is a good approximation
+        The feed is defined by the radius of the feed aperture `a` and the radius of curvature of the
+        spherical phase cap `R`. For narrow flare angle scalar horns, the length of the wall of the horn is a good approximation
         to the radius of curvature.
         
         @ingroup public_api_po
@@ -1510,13 +1511,17 @@ class System(object):
         
         dz = R - np.sqrt(R**2 - rho**2)
         
-        phase = np.exp(1.0j*k*n*dz)
+        phase = np.exp(-1.0j*k*n*dz)
         
-        norm = np.sqrt(_feedDict['power']/(0.846703591814615*a**2))
+        norm = np.sqrt(_feedDict['power']/(0.846703591814615*k**2*a**2))
         field = norm * np.where(rho < a, j0(jn_zeros(0, 1)*rho/a), 0.0) * phase
 
         fields_c = self._compToFields(FieldComponents.Ex, field)
         fields_c.setMeta(name_surface, k)
+        
+        if _feedDict['mode'] in ['full', 0]:
+            fields_c.Hy = field
+
         self.fields[outname] = fields_c
         currents_c = BBeam.calcCurrents(fields_c, self.system[name_surface], _feedDict['mode'])
         currents_c.setMeta(name_surface, k)
@@ -3249,7 +3254,7 @@ class System(object):
                 out = BTransf.transformPO(self.currents[current], transf)
                 self.currents[current] = self.copyObj(out)
    
-    def _compToFields(self, comp : str, field : np.ndarray): #TODO: check typing, Is comp actually a string
+    def _compToFields(self, comp : FieldComponents, field : np.ndarray): #TODO: check typing, Is comp actually a string
         """!
         Transform a single component to a filled fields object by setting all other components to zero.
         

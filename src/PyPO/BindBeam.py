@@ -239,7 +239,8 @@ def calcCurrents(fields, source, mode):
 
     @param fields Fields object containing electromagnetic fields.
     @param source A reflDict dictionary describing the plane on which the Gaussian is defined.
-    @param mode Whether to assume plane is perfect electrical conductor ('PEC'), magnetic conductor ('PMC') or no assumptions ('full').
+    @param mode Whether to assume plane is perfect electrical conductor ('PEC'), magnetic conductor ('PMC'), 
+            no assumptions ('full') or electric fields and currents ('source')
 
     @returns out_current Currents object containing the currents calculated on source.
 
@@ -268,6 +269,9 @@ def calcCurrents(fields, source, mode):
 
     elif mode == "PEC":
         mode = 2
+        
+    elif mode == "source":
+        mode = 3
 
     mode = ctypes.c_int(mode)
 
