@@ -33,6 +33,7 @@ import PyPO.PyPOTypes as PTypes
 import PyPO.Checks as PChecks
 import PyPO.Config as Config
 from PyPO.CustomLogger import CustomLogger
+import PyPO.Colormaps as cmaps
 import PyPO.Plotter as PPlot
 import PyPO.Efficiencies as Effs
 import PyPO.FitGauss as FGauss
@@ -1817,7 +1818,7 @@ class System(object):
     def calcBeamCuts(self, 
                      name_field : str, 
                      comp : FieldComponents, 
-                     interp : int = 1001, 
+                     npoints : int = 1001, 
                      phi : float = 0, 
                      center : bool = True, 
                      align : bool = True,
@@ -1836,11 +1837,13 @@ class System(object):
         oriented along the x- and y-axes.
         It is also possible to not do this and instead directly calculate the cross sections along the x- and y-axes as-is.
         
+        The fields in the cuts are calculated by cubic interpolation of the input fields along the line of the cut.
+        
         @ingroup public_api_po
         
         @param name_field Name of field object.
         @param comp Component of field object. Instance of FieldComponents enum object.
-        @param interp Number of points in x and y strip. Defaults to 1001.
+        @param npoints Number of points in cut strips. Defaults to 1001.
         @param phi Manual rotation of cuts w.r.t. to the x-y cardinal planes.
         @param center Whether to center the cardinal planes on the peak of the beam pattern.
         @param align Whether to align the cardinal planes to the beam pattern minor and major axes.
@@ -1881,7 +1884,7 @@ class System(object):
             max_norm = 1.0
 
         center_use = np.zeros(2)
-        rot_use = np.radians(phi)
+        rot_use = np.deg2rad(phi)
 
         if center or align:
             popt = self.fitGaussAbs(name_field, comp, scale=Scales.LIN, full_output=True)
@@ -1897,10 +1900,10 @@ class System(object):
         ex_edges = -np.sin(rot_use) * y_edges + center_use[0]
         ey_edges = np.cos(rot_use) * y_edges + center_use[1]
         
-        hx_edges_interp = np.linspace(hx_edges[0], hx_edges[1], interp)
-        hy_edges_interp = np.linspace(hy_edges[0], hy_edges[1], interp)
-        ex_edges_interp = np.linspace(ex_edges[0], ex_edges[1], interp)
-        ey_edges_interp = np.linspace(ey_edges[0], ey_edges[1], interp)
+        hx_edges_interp = np.linspace(hx_edges[0], hx_edges[1], npoints)
+        hy_edges_interp = np.linspace(hy_edges[0], hy_edges[1], npoints)
+        ex_edges_interp = np.linspace(ex_edges[0], ex_edges[1], npoints)
+        ey_edges_interp = np.linspace(ey_edges[0], ey_edges[1], npoints)
         
         h_cut = griddata((grids.x.ravel(), grids.y.ravel()), field.ravel(), (hx_edges_interp, hy_edges_interp), method="cubic") 
         e_cut = griddata((grids.x.ravel(), grids.y.ravel()), field.ravel(), (ex_edges_interp, ey_edges_interp), method="cubic") 
@@ -1909,12 +1912,16 @@ class System(object):
             h_cut = 20 * np.log10(h_cut / max_norm)
             e_cut = 20 * np.log10(e_cut / max_norm)
         
-        elif scale == Scales.LIN:
+        elif scale == Scales.AMP:
             h_cut = h_cut / max_norm
             e_cut = e_cut / max_norm
 
-        h_strip = np.linspace(x_edges[0], x_edges[1], interp)
-        e_strip = np.linspace(y_edges[0], y_edges[1], interp)
+        else: # scale == Scales.LIN:
+            h_cut = (h_cut / max_norm)**2
+            e_cut = (e_cut / max_norm)**2
+            
+        h_strip = np.linspace(x_edges[0], x_edges[1], npoints)
+        e_strip = np.linspace(y_edges[0], y_edges[1], npoints)
         
         self.revertToSnap(name_surf, "_")
         self.deleteSnap(name_surf, "_")
@@ -1962,6 +1969,7 @@ class System(object):
         @param vmax Maximum amplitude value to display. Default is 0.
         @param center Whether to calculate beam center and center the beam cuts on this point.
         @param align Whether to find position angle of beam cuts and align cut axes to this.
+        @param norm Plot normalized to 1.0/0.0 dB on first cut
         @param scale Plot in decibels or linear.
         @param units The units of the axes. Instance of Units enum object.
         @param name Name of .png file where plot is saved. Only when save=True. Default is "".
@@ -1972,39 +1980,35 @@ class System(object):
         @returns fig Figure object.
         @returns ax Axes object.
         """
-
-        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=scale)
-
-        vmax = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmax is None else vmax
-        if norm:
-            vmin = np.nanmax([np.nanmax(E_cut), np.nanmax(H_cut)]) if vmin is None else vmin
-        else:
-            vmin = np.nanmax([np.nanmin(E_cut), np.nanmin(H_cut)]) if vmin is None else vmax - abs(vmin)
+        # Always get the cuts in amplitude units - we will apply the scales in the plotter code.
+        #
+        # calcBeamCuts will handle normalization if requested - we do not need to pass it to Plotter.plotBeamCut
+        E_cut, H_cut, E_strip, H_strip = self.calcBeamCuts(name_field, comp, phi=phi, center=center, align=align, norm=norm, scale=Scales.AMP)
             
         labels = [f'{comp.name} $\phi=${phi:.0f}°', f'{comp.name} $\phi=${phi+90:.0f}°']
-            
-        fig, ax = PPlot.plotBeamCut(E_cut, H_cut, E_strip, H_strip, vmin, vmax, units, labels=labels)
+        
+        if title == "":
+            title = f"{name_field} Cuts"
+        
+        fig, ax = PPlot.plotBeamCut(E_strip, E_cut, units=units, vmin=vmin, vmax=vmax, amp_only=True, title=title, scale=scale, label=labels[0])
+        PPlot.plotBeamCut(H_strip, H_cut, units=units, amp_only=True, scale=scale, figax=(fig,ax), label=labels[1])
         
         if comp_cross is not FieldComponents.NONE:
             if norm:
                 norm_cross = comp
             else:
                 norm_cross = False
-            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross)
+            cr45_cut, cr135_cut, cr45_strip, cr135_strip = self.calcBeamCuts(name_field, comp_cross, phi=phi_cross, align=False, center=False, norm=norm_cross, scale=Scales.AMP)
             labels = [f'{comp_cross.name} $\phi=${phi_cross:.0f}°', f'{comp_cross.name} $\phi=${phi_cross+90:.0f}°']
-            PPlot.plotBeamCut(cr45_cut, cr135_cut, cr45_strip, cr135_strip, vmin, vmax, units, figax=(fig, ax), labels=labels)
+            PPlot.plotBeamCut(cr45_strip, cr45_cut, units=units, amp_only=True, scale=scale, figax=(fig, ax), label=labels[0])
+            PPlot.plotBeamCut(cr135_strip, cr135_cut, units=units, amp_only=True, scale=scale, figax=(fig, ax), label=labels[1])
 
-        if title is not "":
-            fig.suptitle(title)
-
+        if save:
+            pt.savefig(fname=self.savePath + '{}_cuts.png'.format(name),
+                        bbox_inches='tight', dpi=300)
+        
         if ret:
             return fig, ax
-
-        elif save:
-            pt.savefig(fname=self.savePath + '{}_EH_cut.jpg'.format(name),
-                        bbox_inches='tight', dpi=300)
-            pt.close()
-
         elif show:
             pt.show()
 
@@ -2314,18 +2318,22 @@ class System(object):
         if comp == FieldComponents.NONE:
             field_comp = self.scalarfields[name_obj].S
             name_surface = self.scalarfields[name_obj].surf
+            k = self.scalarfields[name_obj].k
         
         elif isinstance(comp, FieldComponents):
             PChecks.check_fieldSystem(name_obj, self.fields, self.clog, extern=True)
             field = self.fields[name_obj]
             name_surface = field.surf
+            k = field.k
             field_comp = field[comp.value]
 
         elif isinstance(comp, CurrentComponents):
             PChecks.check_currentSystem(name_obj, self.currents, self.clog, extern=True)
             field = self.currents[name_obj] 
             name_surface = field.surf
+            k = field.k
             field_comp = field[comp.value]
+
 
         if contour is not None:
             if contour_comp == FieldComponents.NONE:
@@ -2343,14 +2351,22 @@ class System(object):
             contour_pl = contour
 
         plotObject = self.system[name_surface]
+        
+        if plotObject['gmode'] == 2:
+            reflGrid = self.generateGrids(name_surface, spheric=False)        
+        else:
+            reflGrid = self.generateGrids(name_surface)
 
         if title is None:
             title = f"{name_obj} {comp.name}"
 
-        fig, ax = PPlot.plotBeam2D(plotObject, field_comp, contour_pl,
-                        vmin, vmax, levels, amp_only,
-                        norm, aperDict, scale, project,
-                        units, title, titleA, titleP, unwrap_phase, correct_phase, field.k)
+        fig, ax = PPlot.plotBeam2D(reflGrid, field_comp, gmode=plotObject['gmode'], 
+                                   contour=contour_pl, levels=levels,
+                                   aperDict=aperDict,
+                                   norm=norm, vmin=vmin, vmax=vmax, 
+                                   amp_only=amp_only, unwrap_phase=unwrap_phase, correct_phase=correct_phase, k=k,
+                                   project=project, units=units,
+                                   figax=None, title=title, cmap=cmaps.parula)
         if ret:
             return fig, ax
 

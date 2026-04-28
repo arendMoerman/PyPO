@@ -39,6 +39,11 @@ In addition, the documentations page contains a comprehensive overview of the co
 The contributor and development guidelines can be found \ref contribguide "here".
 These guidelines contain information on how to raise issues concerning `PyPO`, how to contribute code but also how to run the unit tests and how to generate documentation. 
 
+\section main_pubworks Published Works
+In order to track the usefulness and community impact of `PyPO`,
+we keep a list with published works citing `PyPO` \ref pubworks "here".
+If you have published something using `PyPO`, and for some reason it does not show up in the [Astrophysics Data System page](https://ui.adsabs.harvard.edu/abs/2023JOSS....8.5478M/abstract), let us know and we will add it here!
+
 \section license License
 This project is released under the [MIT License](https://opensource.org/licenses/MIT).
 

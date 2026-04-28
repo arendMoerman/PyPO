@@ -217,6 +217,22 @@ class Modes(CustomEnumScalar):
 
     REL = 0
     ABS = 1
+    
+class GridModes(CustomEnumScalar):
+    """!
+    Enum types for grid modes, 'xy' (rectangular), 'uv' (polar), or 'AoE' (az over el).
+
+    Options:\n
+    xy       : Rectangular grid\n
+    uv       : Polar grid\n
+    AoE      : Azimuth over Elevation farfield grid\n
+
+    @ingroup public_api_argopts
+    """
+
+    xy = 0
+    uv = 1
+    AoE = 2
 
 
 class BeamModes(CustomEnumScalar):
