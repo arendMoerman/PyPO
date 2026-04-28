@@ -1427,7 +1427,7 @@ def check_scalarFeedDict(feedDict, nameList, clog):
             if feedDict['mode'] not in range(3):
                 errStr += errMsg_value('mode', feedDict['mode'], 'feedDict')
     else:
-        feedDict['mode'] = 2
+        feedDict['mode'] = 0
         
     if errStr:
         errList = errStr.split("\n")[:-1]
