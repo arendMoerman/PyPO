@@ -1375,11 +1375,11 @@ def check_scalarFeedDict(feedDict, nameList, clog):
             clog.warning(f"Encountered negative value {feedDict['lam']} in field 'lam' in scalarFeedDict {feedDict['name']}. Changing sign.")
             feedDict["lam"] *= -1
     else:
-        errStr += errMsg_field("lam", "feedDict")
+        errStr += errMsg_field("lam", "scalarFeedDict")
     
     # Check for aperture radius, and check it is a positive number
     if "a" in feedDict:
-        if feedDict["a"] == 0 + 0j:
+        if feedDict["a"] == 0:
             clog.info(f"Can't have an aperture radius a of zero. Therefore changing it to twice the wavelength: a = {2*feedDict['lam']:.42f}!")
             feedDict["a"] = feedDict["lam"]*2
 
@@ -1390,7 +1390,7 @@ def check_scalarFeedDict(feedDict, nameList, clog):
             clog.warning(f"Encountered negative value {feedDict['a']} in field 'a' in scalarFeedDict {feedDict['name']}. Changing sign.")
             feedDict["a"] *= -1
     else:
-        errStr += errMsg_field("a", "feedDict")
+        errStr += errMsg_field("a", "scalarFeedDict")
         
     # Check for radius of phase curvature, and check it is a number
     if "R" in feedDict:
@@ -1417,7 +1417,7 @@ def check_scalarFeedDict(feedDict, nameList, clog):
     # Check for the mode of the source. Silently default to PEC
     if "mode" in feedDict:
         if not ((isinstance(feedDict["mode"], int)) or (isinstance(feedDict["mode"], str)) ):
-            errStr += errMsg_type("mode", type(feedDict["mode"]), "feedDict", [str, int])
+            errStr += errMsg_type("mode", type(feedDict["mode"]), "scalarFeedDict", [str, int])
         if (isinstance(feedDict['mode'], str)):
             if feedDict['mode'].lower() not in Beam_modelist:
                 errStr += errMsg_value('mode', feedDict['mode'], 'scalarFeedDict')
@@ -1425,7 +1425,7 @@ def check_scalarFeedDict(feedDict, nameList, clog):
                 feedDict['mode'] = Beam_modelist.index(feedDict['mode'].lower())
         else:
             if feedDict['mode'] not in range(3):
-                errStr += errMsg_value('mode', feedDict['mode'], 'feedDict')
+                errStr += errMsg_value('mode', feedDict['mode'], 'scalarFeedDict')
     else:
         feedDict['mode'] = 0
         

@@ -1486,6 +1486,8 @@ class System(object):
         spherical phase cap `R`. For narrow flare angle scalar horns, the length of the wall of the horn is a good approximation
         to the radius of curvature.
         
+        See Goldsmith "Quasioptical Systems" (1998), Ch. 7.6.2 eq (7.36)
+        
         @ingroup public_api_po
         
         @param scalarFeedDict A scalarFeedDict containing parameters for the scalar feed.
@@ -1509,9 +1511,7 @@ class System(object):
         
         rho = np.sqrt(grid.x**2 + grid.y**2)
         
-        dz = R - np.sqrt(R**2 - rho**2)
-        
-        phase = np.exp(-1.0j*k*n*dz)
+        phase = np.exp(-1.0j*k*n*rho**2/(2*R))
         
         norm = np.sqrt(_feedDict['power']/(0.846703591814615*k**2*a**2))
         field = norm * np.where(rho < a, j0(jn_zeros(0, 1)*rho/a), 0.0) * phase
@@ -1527,99 +1527,7 @@ class System(object):
         currents_c.setMeta(name_surface, k)
 
         self.currents[outname] = currents_c
-
-    def runRayTracer(self, runRTDict : dict):
-        """!
-        Run a ray-trace propagation from a frame to a surface.
         
-        The resulting frame is placed in the internal frames dictionary.
-        
-        @ingroup public_api_frames
-        
-        @param runRTDict A runRTDict object specifying the ray-trace.
-        """
-
-        self.clog.work("*** Starting RT propagation ***")
-        
-        _runRTDict = self.copyObj(runRTDict)
-
-        PChecks.check_runRTDict(_runRTDict, self.system, self.frames, self.clog)
-
-        _runRTDict["fr_in"] = self.frames[_runRTDict["fr_in"]]
-        _runRTDict["t_name"] = self.system[_runRTDict["t_name"]]
-
-        start_time = time.time()
-       
-        if _runRTDict["device"] == "CPU":
-            self.clog.work(f"Hardware: running {_runRTDict['nThreads']} CPU threads.")
-            self.clog.work(f"... Calculating ...")
-            frameObj = BCPU.RT_CPUd(_runRTDict)
-
-        elif _runRTDict["device"] == "GPU":
-            self.clog.work(f"Hardware: running {_runRTDict['nThreads']} CUDA threads per block.")
-            self.clog.work(f"... Calculating ...")
-            frameObj = BGPU.RT_GPUf(_runRTDict)
-        
-        dtime = time.time() - start_time
-        
-        self.clog.work(f"*** Finished: {dtime:.3f} seconds ***")
-        self.frames[runRTDict["fr_out"]] = frameObj
-        
-        self.frames[runRTDict["fr_out"]].setMeta(self.calcRTcenter(runRTDict["fr_out"]), self.calcRTtilt(runRTDict["fr_out"]), self.copyObj(world.INITM()))
-    
-    def runHybridPropagation(self, hybridDict : dict):
-        """!
-        Perform a hybrid RT/PO propagation, starting from a reflected field and set of Poynting vectors.
-        
-        The propagation is done by performing a ray trace from the starting frame into the target surface.
-        Then, the starting reflected field is propagated to the target by multiplying each point on the field by the 
-        phase factor corresponding to the travel length of the Poynting vector ray associated to the point on the field.
-        Stores name of resultant field and frame in the internal association dictionary as two associated objects.
-        The name of the association is the surface on which both the target frame and field are defined.
-        
-        @ingroup public_api_hybrid
-        
-        @param hybridDict A hybridDict dictionary.
-        """
-
-        self.clog.work("*** Starting hybrid propagation ***")
-        start_time = time.time()
-
-        PChecks.check_hybridDict(hybridDict, self.system, self.frames, self.fields, self.clog)
-        surf = self.fields[hybridDict["field_in"]].surf
-        PChecks.check_associations(self.assoc, hybridDict["field_in"], hybridDict["fr_in"], surf, self.clog)
-
-        field = self.copyObj(self.fields[hybridDict["field_in"]])
-
-        verbosity_init = self.verbosity
-
-        self.setLoggingVerbosity(verbose=False)
-        self.runRayTracer(hybridDict)
-        self.setLoggingVerbosity(verbose=verbosity_init)
-
-        stack = self.calcRayLen(hybridDict["fr_in"], hybridDict["fr_out"], start=hybridDict["start"])
-        if hybridDict["start"] is not None:
-            expo = np.exp(1j * field.k * stack[1]) * np.sqrt(stack[0] / (2*stack[1] + stack[0])) # Initial curvature
-
-        else:
-            expo = np.exp(1j * field.k * stack[0])
-
-        _comps = []
-        for i in range(6):
-            _comps.append((expo * field[i].ravel()).reshape(field[i].shape))
-
-        field_prop = PTypes.fields(*_comps)
-        field_prop.setMeta(hybridDict["t_name"], field.k)
-
-        self.fields[hybridDict["field_out"]] = field_prop
-
-        if hybridDict["interp"]:
-            self.interpFrame(hybridDict["fr_out"], hybridDict["field_out"], hybridDict["t_name"], hybridDict["field_out"], comp=hybridDict["comp"])
-        
-        dtime = time.time() - start_time
-
-        self.assoc[hybridDict["t_name"]] = [hybridDict["field_out"], hybridDict["fr_out"]]
-        self.clog.work(f"*** Finished: {dtime:.3f} seconds ***")
 
     def interpFrame(self, 
                     name_fr_in : str, 
