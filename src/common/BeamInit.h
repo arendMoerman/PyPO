@@ -788,6 +788,41 @@ void calcJM(T *res_field, T *res_current, V refldict, int mode)
         }
     }
 
+    // Source mode - electric field and currents
+    else if (mode == 3)
+    {
+        for (int i=0; i<nTot; i++)
+        {
+            field[0] = {res_field->r1x[i], res_field->i1x[i]};
+            field[1] = {res_field->r1y[i], res_field->i1y[i]};
+            field[2] = {res_field->r1z[i], res_field->i1z[i]};
+
+            n_source[0] = reflc.nx[i];
+            n_source[1] = reflc.ny[i];
+            n_source[2] = reflc.nz[i];
+
+            ut.ext(n_source, field, js);
+
+            res_current->r1x[i] = 2*js[0].real();
+            res_current->i1x[i] = 2*js[0].imag();
+
+            res_current->r1y[i] = 2*js[1].real();
+            res_current->i1y[i] = 2*js[1].imag();
+
+            res_current->r1z[i] = 2*js[2].real();
+            res_current->i1z[i] = 2*js[2].imag();
+
+            res_current->r2x[i] = 0;
+            res_current->i2x[i] = 0;
+
+            res_current->r2y[i] = 0;
+            res_current->i2y[i] = 0;
+
+            res_current->r2z[i] = 0;
+            res_current->i2z[i] = 0;
+        }
+    }
+
     delete reflc.x;
     delete reflc.y;
     delete reflc.z;

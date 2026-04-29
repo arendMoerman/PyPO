@@ -10,6 +10,7 @@ from __future__ import annotations
 # Standard Python imports
 from scipy.optimize import fmin
 from scipy.interpolate import interp1d, griddata
+from scipy.special import jv, j0, jn_zeros
 import matplotlib.pyplot as pt
 import matplotlib.cm as cm
 import numpy as np
@@ -1474,6 +1475,60 @@ class System(object):
 
         self.scalarfields[_gaussDict["name"]] = gauss_in
 
+    def createScalarFeed(self, scalarFeedDict : dict, name_surface : str):
+        """!
+        Create a scalar feed (e.g. a well-designed corrugated horn), using the truncated Bessel function with 
+        spherical phase cap approximation.
+        
+        This method creates an approximation to the aperture field of a scalar feed such as a corrugated horn in the
+        centered on the origin of the x-y plane and propagating in the positive z-direction.  Only the co-polar E field is created.
+        
+        The feed is defined by the radius of the feed aperture `a` and the radius of curvature of the
+        spherical phase cap `R`. For narrow flare angle scalar horns, the length of the wall of the horn is a good approximation
+        to the radius of curvature.
+        
+        See Goldsmith "Quasioptical Systems" (1998), Ch. 7.6.2 eq (7.36)
+        
+        @ingroup public_api_po
+        
+        @param scalarFeedDict A scalarFeedDict containing parameters for the scalar feed.
+        @param name_surface Name of plane on which to define the scalar feed.
+        
+        @see scalarFeedDict
+        """
+        PChecks.check_elemSystem(name_surface, self.system, self.clog, extern=True)
+
+        _feedDict = self.copyObj(scalarFeedDict)
+        PChecks.check_scalarFeedDict(_feedDict, self.fields, self.clog)
+        
+        k = 2 * np.pi / _feedDict["lam"]
+        a = _feedDict['a']
+        R = _feedDict['R']
+        n = _feedDict['n']
+        
+        outname = _feedDict['name']
+        
+        grid = self.generateGrids(name_surface)
+        
+        rho = np.sqrt(grid.x**2 + grid.y**2)
+        
+        phase = np.exp(-1.0j*k*n*rho**2/(2*R))
+        
+        norm = np.sqrt(_feedDict['power']/(0.846703591814615*k**2*a**2))
+        field = norm * np.where(rho < a, j0(jn_zeros(0, 1)*rho/a), 0.0) * phase
+
+        fields_c = self._compToFields(FieldComponents.Ex, field)
+        fields_c.setMeta(name_surface, k)
+        
+        if _feedDict['mode'] in ['full', 0]:
+            fields_c.Hy = field
+
+        self.fields[outname] = fields_c
+        currents_c = BBeam.calcCurrents(fields_c, self.system[name_surface], _feedDict['mode'])
+        currents_c.setMeta(name_surface, k)
+
+        self.currents[outname] = currents_c
+    
     def runRayTracer(self, runRTDict : dict):
         """!
         Run a ray-trace propagation from a frame to a surface.
@@ -3215,7 +3270,7 @@ class System(object):
                 out = BTransf.transformPO(self.currents[current], transf)
                 self.currents[current] = self.copyObj(out)
    
-    def _compToFields(self, comp : str, field : np.ndarray): #TODO: check typing, Is comp actually a string
+    def _compToFields(self, comp : FieldComponents, field : np.ndarray): #TODO: check typing, Is comp actually a string
         """!
         Transform a single component to a filled fields object by setting all other components to zero.
         

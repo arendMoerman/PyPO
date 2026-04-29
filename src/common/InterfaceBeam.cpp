@@ -132,7 +132,7 @@ void makeScalarGauss(ScalarGPODict sgdict, reflparams plane, arrC1 *res_field)
  * @param res_current Pointer to c2Bundle or c2Bundlef object.
  * @param refldict reflparams or reflparamsf object corresponding to surface on
  *      which to calculate currents.
- * @param mode How to calculate currents. 0 is full currents, 1 is PMC and 2 is PEC.
+ * @param mode How to calculate currents. 0 is full currents, 1 is PMC reflector, 2 is PEC reflector, 3 is electric source.
  *
  * @see calcJM()
  * @see c2Bundle

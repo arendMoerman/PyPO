@@ -206,7 +206,7 @@ class Objects(CustomEnumString):
 
 class Modes(CustomEnumScalar):
     """!
-    Enum types for transformation modes, absolute or relative.
+    Enum type for transformation modes, absolute or relative.
 
     Options:\n
     REL       : Relative translation/rotation\n
@@ -233,6 +233,42 @@ class GridModes(CustomEnumScalar):
     xy = 0
     uv = 1
     AoE = 2
+
+
+class BeamModes(CustomEnumScalar):
+    """!
+    Enum type for modes for creation of currents from arbitray fields.
+
+    Options:\n
+    BOTH        : Create magnetic and electric currents\n
+    PMC         : Create magnetic currents only\n
+    PEC         : Create electric currents only.
+
+    @ingroup public_api_argopts
+    """
+
+    BOTH = 0
+    PMC = 1
+    PEC = 2
+    
+class POModes(CustomEnumScalar):
+    """!
+    Enum type for Physical Optics calculation modes
+    
+    Options:\n
+    JM          : Calculate currents only\n
+    EH          : Calculate fields only\n
+    JMEH        : Calculate fields and currents\n
+    EHP         : Calculate fields and Poynting vector\n
+    FF          : Calculate far fields\n
+    scalar      : Calculate scalar field
+    """
+    JM = 0
+    EH = 1
+    JMEH = 2
+    EHP = 3
+    FF = 4
+    scalar = 5
 
 class AperShapes(CustomEnumScalar):
     """!
