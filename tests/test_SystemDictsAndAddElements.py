@@ -4,7 +4,7 @@ Tests for checking if objects are properly added to the system.
 """
 
 import unittest
-from PyPO.Checks import InputReflError, InputRTError, InputPOError
+from PyPO.Checks import InputReflError, InputRTError, InputPOError, InputSourceError
 import PyPO.Templates as pypotemp
 
 from PyPO.System import System
@@ -67,7 +67,7 @@ class Test_SystemDictsAndAddElement(unittest.TestCase):
         self.assertEqual(len(self.s.fields), ltot)
         self.assertEqual(len(self.s.currents), ltot)
 
-        with self.assertRaises(InputPOError):
+        with self.assertRaises(InputSourceError):
             func(self.s, self.invalidDict, TestTemplates.plane_xy["name"]) 
     
     @params(System.createScalarGaussian, System.createPointSourceScalar, System.createUniformSourceScalar)
@@ -76,7 +76,7 @@ class Test_SystemDictsAndAddElement(unittest.TestCase):
 
         self.assertEqual(len(self.s.scalarfields), ltot)
 
-        with self.assertRaises(InputPOError):
+        with self.assertRaises(InputSourceError):
             func(self.s, self.invalidDict, TestTemplates.plane_xy["name"]) 
 
 if __name__ == "__main__":
