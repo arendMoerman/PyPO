@@ -90,7 +90,7 @@ GPODict = {
         }
 
 ##
-# Template for a VecPODict, containing parameters for constructing a symmetric vectorial Gaussian beam 
+# Template for a vecGPODict, containing parameters for constructing a symmetric vectorial Gaussian beam 
 # using the complex source point method.
 # 
 # This template defines a vectorial Gaussian beam propagating along the positive z-axis, with the primary E-field
@@ -117,6 +117,32 @@ vecGPODict = {
         "power"     : "Total power contained in the beam (real). Defaults to 4pi if not set.",
         "mode"      : "Mode to create beam in. One of 'full', 'PEC', 'PMC'"
         }
+
+##
+# Template for a scalarFeedDict, containing parameters for constructing the aperture field of a scalar feed using the
+# truncated Bessel function approximation.
+# 
+# This template defines a scalar feed transmitting along the positive z-axis, with the primary E-field
+# polarized along the positive x-axis. Unless specified, the power in the beam is normalized to 4pi √W (this ensures
+# that the farfields are in dBi).
+
+# The beam is defined by the aperture radius `a` of the feed, and a radius of phase curvature `R`, defining the distance to
+# the phase center of the feed.  A positive distance places the phase center of the feed on the negative z axis. The length
+# of the wall of an corrugated horn from throat to the aperture is a good approximation for narrow beam width horns.
+
+# The surface on which the beam is calculated lies on the xy-plane at z=0.
+# 
+# @ingroup public_api_templates
+scalarFeedDict = {
+        "name"      : "Name of scalar feed",
+        "lam"       : "Wavelength of Gaussian beam in mm (positive real)",
+        "a"         : "Radius of the aperture of the feed (positive real)",
+        "R"         : "Radius of phase curvature of the feed. Should be positive for most feeds (real)",
+        "n"         : "Refractive index of medium. Defaults to 1.0.",
+        "power"     : "Total power contained in the beam (real). Defaults to 4pi if not set.",
+        "mode"      : "Mode to create beam in. One of 'full' (default), 'PEC', 'PMC'"
+        }
+
 
 ##
 # Template for a point source dictionary. The point source is generated on the accompanying source surface.
